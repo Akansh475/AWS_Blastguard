@@ -2,7 +2,7 @@
 
 > **Core statement**: *"Before you change production, know what will break."*
 
-This document defines the strict HTTP API interface, payload schemas, and data models for BlastGuard Core Infrastructure Intelligence. All endpoints follow REST conventions and return JSON responses.
+This document defines the strict HTTP API interface, payload schemas, and data models for BlastGuard Core Infrastructure Intelligence (Stage 2). All endpoints follow REST conventions and return JSON responses.
 
 ---
 
@@ -78,8 +78,8 @@ Submit a new infrastructure modification proposal for analysis.
 | Field | Type | Required | Allowed Values / Description |
 |---|---|---|---|
 | `action` | string | Yes | `'CREATE'`, `'UPDATE'`, `'DELETE'` |
-| `resourceId` | string | Yes | Non-empty AWS resource identifier (e.g. `subnet-07`, `vpc-prod-main`) |
-| `resourceType` | string | Yes | `'VPC'`, `'Subnet'`, `'EC2'`, `'ECS'`, `'RDS'`, `'Lambda'`, `'S3'`, `'IAM'`, `'LoadBalancer'`, `'SecurityGroup'` |
+| `resourceId` | string | Yes | Non-empty AWS resource identifier (e.g. `subnet-07`, `vpc-prod`) |
+| `resourceType` | string | Yes | `'VPC'`, `'Subnet'`, `'EC2'`, `'ECS'`, `'RDS'`, `'Lambda'`, `'S3'`, `'IAM'`, `'LoadBalancer'`, `'SecurityGroup'`, `'External'` |
 | `region` | string | Yes | Target AWS region (e.g. `ap-south-1`) |
 | `environment` | string | Yes | `'DEV'`, `'STAGING'`, `'PRODUCTION'` |
 | `details` | object | No | Optional metadata / reason describing proposed change |
@@ -173,91 +173,219 @@ Retrieve details and current status of a single change request.
 }
 ```
 
-#### Error Response (404 Not Found)
-```json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "ChangeRequest with ID 'cr-unknown' not found"
-  }
-}
-```
-
 ---
 
 ### 2.5 Calculate / Retrieve Impact Graph
 Retrieve the dependency topology and blast radius graph for the resource referenced in the change request.
+Generated deterministically by `TopologyAnalysisService` from graph traversal.
 
 - **Method**: `GET`
 - **Route**: `/api/requests/:requestId/impact`
 
 #### Success Response (200 OK)
+For `DELETE subnet-07`:
 ```json
 {
   "data": {
     "rootResourceId": "subnet-07",
-    "blastRadiusCount": 4,
-    "directImpactCount": 3,
-    "indirectImpactCount": 1,
+    "blastRadiusCount": 11,
+    "directImpactCount": 2,
+    "indirectImpactCount": 8,
     "depth": 2,
-    "nodes": [
+    "criticalServicesCount": 3,
+    "externalDependenciesCount": 2,
+    "affectedNodes": [
       {
         "id": "subnet-07",
-        "label": "private-app-subnet-07",
+        "name": "subnet-07",
         "type": "Subnet",
         "criticality": "CRITICAL",
         "environment": "PRODUCTION",
-        "region": "ap-south-1",
-        "data": {
-          "arn": "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-07"
-        }
-      },
-      {
-        "id": "ec2-order-processor",
-        "label": "order-processing-instance",
-        "type": "EC2",
-        "criticality": "HIGH",
-        "environment": "PRODUCTION",
         "region": "ap-south-1"
       },
       {
-        "id": "rds-main-postgres",
-        "label": "primary-orders-postgres",
-        "type": "RDS",
+        "id": "payment-api",
+        "name": "payment-api",
+        "type": "ECS",
         "criticality": "CRITICAL",
         "environment": "PRODUCTION",
         "region": "ap-south-1"
       },
       {
-        "id": "vpc-prod-main",
-        "label": "production-primary-vpc",
-        "type": "VPC",
+        "id": "payment-worker",
+        "name": "payment-worker",
+        "type": "EC2",
+        "criticality": "CRITICAL",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1"
+      },
+      {
+        "id": "payment-db",
+        "name": "payment-db",
+        "type": "RDS",
         "criticality": "HIGH",
         "environment": "PRODUCTION",
         "region": "ap-south-1"
+      },
+      {
+        "id": "payment-notifier",
+        "name": "payment-notifier",
+        "type": "Lambda",
+        "criticality": "CRITICAL",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1"
+      },
+      {
+        "id": "payment-security-group",
+        "name": "payment-security-group",
+        "type": "SecurityGroup",
+        "criticality": "HIGH",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1"
+      },
+      {
+        "id": "payment-data-bucket",
+        "name": "payment-data-bucket",
+        "type": "S3",
+        "criticality": "HIGH",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1"
+      },
+      {
+        "id": "iam-payment-role",
+        "name": "iam-payment-role",
+        "type": "IAM",
+        "criticality": "HIGH",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1"
+      },
+      {
+        "id": "order-service",
+        "name": "order-service",
+        "type": "ECS",
+        "criticality": "HIGH",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1"
+      },
+      {
+        "id": "production-load-balancer",
+        "name": "production-load-balancer",
+        "type": "LoadBalancer",
+        "criticality": "HIGH",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1",
+        "isExternal": true
+      },
+      {
+        "id": "external-payment-gateway",
+        "name": "external-payment-gateway",
+        "type": "External",
+        "criticality": "HIGH",
+        "environment": "PRODUCTION",
+        "region": "ap-south-1",
+        "isExternal": true
       }
     ],
+    "criticalNodes": [
+      {
+        "id": "payment-api",
+        "name": "payment-api",
+        "type": "ECS",
+        "criticality": "CRITICAL",
+        "environment": "PRODUCTION"
+      },
+      {
+        "id": "payment-worker",
+        "name": "payment-worker",
+        "type": "EC2",
+        "criticality": "CRITICAL",
+        "environment": "PRODUCTION"
+      },
+      {
+        "id": "payment-notifier",
+        "name": "payment-notifier",
+        "type": "Lambda",
+        "criticality": "CRITICAL",
+        "environment": "PRODUCTION"
+      }
+    ],
+    "externalNodes": [
+      {
+        "id": "production-load-balancer",
+        "name": "production-load-balancer",
+        "type": "LoadBalancer",
+        "criticality": "HIGH",
+        "isExternal": true
+      },
+      {
+        "id": "external-payment-gateway",
+        "name": "external-payment-gateway",
+        "type": "External",
+        "criticality": "HIGH",
+        "isExternal": true
+      }
+    ],
+    "nodes": [...],
     "edges": [
       {
-        "id": "edge-direct-1",
-        "source": "ec2-order-processor",
-        "target": "subnet-07",
-        "relationship": "DEPENDS_ON",
-        "label": "EC2 instance resides within subnet-07"
-      },
-      {
-        "id": "edge-direct-2",
-        "source": "rds-main-postgres",
-        "target": "subnet-07",
-        "relationship": "DEPENDS_ON",
-        "label": "RDS Database primary subnet member subnet-07"
-      },
-      {
-        "id": "edge-direct-3",
+        "id": "edge-1",
         "source": "subnet-07",
-        "target": "vpc-prod-main",
-        "relationship": "CONTAINS",
-        "label": "Subnet 07 is contained inside VPC"
+        "target": "payment-api",
+        "relationship": "HOSTS"
+      },
+      {
+        "id": "edge-2",
+        "source": "subnet-07",
+        "target": "payment-worker",
+        "relationship": "HOSTS"
+      },
+      {
+        "id": "edge-3",
+        "source": "production-load-balancer",
+        "target": "payment-api",
+        "relationship": "ROUTES_TO"
+      },
+      {
+        "id": "edge-4",
+        "source": "order-service",
+        "target": "payment-api",
+        "relationship": "CALLS"
+      },
+      {
+        "id": "edge-5",
+        "source": "payment-api",
+        "target": "payment-db",
+        "relationship": "CONNECTS_TO"
+      },
+      {
+        "id": "edge-6",
+        "source": "payment-api",
+        "target": "payment-security-group",
+        "relationship": "PROTECTED_BY"
+      },
+      {
+        "id": "edge-7",
+        "source": "payment-api",
+        "target": "iam-payment-role",
+        "relationship": "USES"
+      },
+      {
+        "id": "edge-8",
+        "source": "payment-api",
+        "target": "payment-notifier",
+        "relationship": "CALLS"
+      },
+      {
+        "id": "edge-9",
+        "source": "payment-api",
+        "target": "external-payment-gateway",
+        "relationship": "CALLS"
+      },
+      {
+        "id": "edge-10",
+        "source": "payment-api",
+        "target": "payment-data-bucket",
+        "relationship": "STORES_IN"
       }
     ]
   }
@@ -267,7 +395,7 @@ Retrieve the dependency topology and blast radius graph for the resource referen
 ---
 
 ### 2.6 Trigger Analysis for Change Request
-Initiate comprehensive infrastructure safety analysis. In Stage 1, returns the structured baseline contract with calculated blast radius graph and placeholder fields ready for Stage 2 intelligence engines.
+Initiate infrastructure safety analysis. In Stage 2, calculates blast radius and evaluates placeholder risk metrics.
 
 - **Method**: `POST`
 - **Route**: `/api/requests/:requestId/analyze`
@@ -280,30 +408,78 @@ Initiate comprehensive infrastructure safety analysis. In Stage 1, returns the s
     "requestId": "cr-a1b2c3d4",
     "status": "REVIEW",
     "decision": "REVIEW",
-    "riskScore": 60,
+    "riskScore": 85,
     "riskLevel": "HIGH",
-    "blastRadius": 4,
-    "impactGraph": {
-      "rootResourceId": "subnet-07",
-      "blastRadiusCount": 4,
-      "directImpactCount": 3,
-      "indirectImpactCount": 1,
-      "depth": 2,
-      "nodes": [...],
-      "edges": [...]
-    },
+    "blastRadius": 11,
+    "impactGraph": { ... },
     "securityFindings": [],
     "policyViolations": [],
-    "summary": "Stage 1 baseline analysis for DELETE on Subnet (subnet-07) in PRODUCTION. Direct dependencies: 3, total blast radius: 4 resources.",
+    "summary": "Stage 1/2 baseline analysis for DELETE on Subnet (subnet-07) in PRODUCTION. Direct dependencies: 2, total blast radius: 11 resources.",
     "recommendations": [
-      "Assess the 3 directly connected resources before executing DELETE.",
-      "Full Stage 2 intelligence engine with multi-agent Bedrock analysis will compute deep policy/security checks."
+      "Assess the 2 directly connected resources before executing DELETE.",
+      "Full Stage 3 intelligence engine with multi-agent Bedrock analysis will compute deep policy/security checks."
     ],
-    "analyzedAt": "2026-09-17T08:00:05.123Z",
+    "analyzedAt": "2026-09-17T08:00:05.123Z"
+  }
+}
+```
+
+---
+
+### 2.7 Get Resource by ID
+Look up a specific resource directly from the infrastructure provider catalog.
+
+- **Method**: `GET`
+- **Route**: `/api/resources/:resourceId`
+
+#### Success Response (200 OK)
+```json
+{
+  "data": {
+    "id": "subnet-07",
+    "name": "subnet-07",
+    "type": "Subnet",
+    "region": "ap-south-1",
+    "environment": "PRODUCTION",
+    "criticality": "CRITICAL",
+    "arn": "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-07",
+    "tags": {
+      "Environment": "production",
+      "Tier": "private-app",
+      "Workload": "payments"
+    },
     "metadata": {
-      "stage": 1,
-      "engineStatus": "placeholder_active"
+      "vpcId": "vpc-prod",
+      "cidrBlock": "10.0.7.0/24"
     }
+  }
+}
+```
+
+#### Error Response (404 Not Found)
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Resource with ID 'subnet-nonexistent' not found"
+  }
+}
+```
+
+---
+
+### 2.8 List Resources
+List all resources in the inventory.
+
+- **Method**: `GET`
+- **Route**: `/api/resources`
+
+#### Success Response (200 OK)
+```json
+{
+  "data": [ ... ],
+  "meta": {
+    "total": 20
   }
 }
 ```
@@ -312,21 +488,16 @@ Initiate comprehensive infrastructure safety analysis. In Stage 1, returns the s
 
 ## 3. Data Contracts
 
-### 3.1 ChangeRequest
-```typescript
-interface ChangeRequest {
-  id: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE';
-  resourceId: string;
-  resourceType: 'VPC' | 'Subnet' | 'EC2' | 'ECS' | 'RDS' | 'Lambda' | 'S3' | 'IAM' | 'LoadBalancer' | 'SecurityGroup';
-  region: string;
-  environment: 'DEV' | 'STAGING' | 'PRODUCTION';
-  status: 'PENDING' | 'ANALYZING' | 'SAFE' | 'REVIEW' | 'BLOCKED' | 'FAILED';
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
-  details?: Record<string, unknown>;
-}
-```
+### 3.1 Dependency Relationships
+Supported relationships:
+- `HOSTS`: Subnet / VPC hosting a compute, database, or network workload
+- `DEPENDS_ON`: Resource depending directly on network / parent resource
+- `CONNECTS_TO`: Workload connecting to database, cache, or datastore
+- `USES`: Workload using an IAM role or encryption key
+- `ROUTES_TO`: Ingress Load Balancer forwarding traffic to an internal target group
+- `PROTECTED_BY`: Workload protected by a Security Group
+- `STORES_IN`: Workload storing objects in an S3 bucket
+- `CALLS`: Service invoking another service, Lambda, or external API
 
 ### 3.2 ImpactGraph
 ```typescript
@@ -334,19 +505,26 @@ interface ImpactGraph {
   rootResourceId: string;
   nodes: TopologyNode[];
   edges: TopologyEdge[];
+  affectedNodes: TopologyNode[];
+  criticalNodes: TopologyNode[];
+  externalNodes: TopologyNode[];
   blastRadiusCount: number;
   directImpactCount: number;
   indirectImpactCount: number;
+  criticalServicesCount?: number;
+  externalDependenciesCount?: number;
   depth?: number;
 }
 
 interface TopologyNode {
   id: string;
-  label: string;
+  name: string;
   type: ResourceType;
   criticality: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   environment: 'DEV' | 'STAGING' | 'PRODUCTION';
-  region: string;
+  region?: string;
+  isExternal?: boolean;
+  label?: string;
   data?: Record<string, unknown>;
 }
 
@@ -354,49 +532,7 @@ interface TopologyEdge {
   id: string;
   source: string;
   target: string;
-  relationship: 'CONTAINS' | 'DEPENDS_ON' | 'CONNECTS_TO' | 'ATTACHED_TO' | 'ROUTES_TO' | 'SECURED_BY' | 'PERMITS' | string;
+  relationship: 'HOSTS' | 'DEPENDS_ON' | 'CONNECTS_TO' | 'USES' | 'ROUTES_TO' | 'PROTECTED_BY' | 'STORES_IN' | 'CALLS' | string;
   label?: string;
-}
-```
-
-### 3.3 AnalysisResult
-> **Person 2 Compatibility Guarantee**: `AnalysisResult` is locked with optional extensions in `metadata` and typed arrays for `securityFindings` and `policyViolations`. Subsequent stages will populate these fields without altering the existing schema or breaking client integrations.
-
-```typescript
-interface AnalysisResult {
-  id: string;
-  requestId: string;
-  status: 'PENDING' | 'ANALYZING' | 'SAFE' | 'REVIEW' | 'BLOCKED' | 'FAILED';
-  decision: 'SAFE' | 'REVIEW' | 'BLOCK';
-  riskScore: number; // 0 to 100
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  blastRadius: number;
-  impactGraph: ImpactGraph;
-  securityFindings: SecurityFinding[];
-  policyViolations: PolicyViolation[];
-  summary: string;
-  recommendations: string[];
-  analyzedAt: string; // ISO 8601
-  metadata?: Record<string, unknown>;
-}
-
-interface SecurityFinding {
-  id: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  title: string;
-  description: string;
-  affectedResourceId: string;
-  remediation?: string;
-  ruleId?: string;
-}
-
-interface PolicyViolation {
-  id: string;
-  policyId: string;
-  policyName: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  description: string;
-  nonCompliantResource: string;
-  guidelineUrl?: string;
 }
 ```

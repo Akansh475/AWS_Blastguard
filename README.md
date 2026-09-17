@@ -4,187 +4,144 @@
 
 BlastGuard is an infrastructure safety system for AWS. An engineer proposes an infrastructure modification such as `DELETE subnet-07`. BlastGuard analyzes what depends on the resource, what downstream workloads could be affected, security implications, policy violations, blast radius, deterministic risk scores, and delivers an authoritative **SAFE / REVIEW / BLOCK** decision before changes hit production.
 
-This repository contains **STAGE 1: Core Infrastructure Intelligence Backend Foundation**.
+This repository contains **STAGE 1 & STAGE 2: Core Infrastructure Intelligence & Deterministic Topology Engine**.
 
 ---
 
 ## Architecture Overview
 
-Stage 1 establishes a modular, type-safe backend foundation designed to cleanly isolate infrastructure intelligence from API presentation, without tightly coupling the application to AWS credentials or live cloud environments.
+BlastGuard adheres strictly to the architectural rule: **`API → Service → ResourceProvider → Graph`**. Infrastructure and dependency intelligence are decoupled from presentation routes and handlers.
 
 ```
 AWS_Blastguard/
-├── .env.example               # Sample environment configuration
-├── .gitignore
-├── API_CONTRACT.md            # Comprehensive API data contracts & schemas
-├── README.md                  # System documentation & setup guide
-├── package.json               # Node dependencies & npm scripts
-├── template.yaml              # AWS SAM template (Lambda + API Gateway)
-├── tsconfig.json              # Strict TypeScript configuration
+├── .env.example                     # Environment template (ap-south-1, mock mode)
+├── .gitignore                       # Standard ignore rules
+├── API_CONTRACT.md                  # Comprehensive API data contracts & schemas
+├── README.md                        # System documentation & setup guide
+├── package.json                     # Dependencies, build & test scripts
+├── template.yaml                    # AWS SAM template (Lambda + API Gateway)
+├── tsconfig.json                    # Strict TypeScript configuration
 │
 ├── src/
-│   ├── app.ts                 # Express application with CORS & error handlers
-│   ├── server.ts              # Local standalone HTTP server entrypoint
+│   ├── app.ts                       # Express application with CORS & error middleware
+│   ├── server.ts                    # Local HTTP server entrypoint
 │   │
-│   ├── config/                # Typed configuration loader
+│   ├── config/                      # Strongly typed environment configuration
+│   │   └── index.ts                 # Loads AWS_REGION, BLASTGUARD_MODE, FRONTEND_URL
+│   │
+│   ├── models/                      # Strongly typed domain models
+│   │   ├── Resource.ts              # 10+ AWS resource types, environments, criticality
+│   │   ├── Dependency.ts            # HOSTS, DEPENDS_ON, CONNECTS_TO, USES, ROUTES_TO, etc.
+│   │   ├── ChangeRequest.ts         # Actions, environments, statuses, DTOs
+│   │   ├── TopologyNode.ts          # id, name, type, environment, criticality
+│   │   ├── TopologyEdge.ts          # source, target, relationship
+│   │   ├── ImpactGraph.ts           # nodes, edges, affectedNodes, criticalNodes, externalNodes
+│   │   ├── SecurityFinding.ts       # Security vulnerability finding schema
+│   │   ├── PolicyViolation.ts       # Governance rule violation schema
+│   │   ├── RiskResult.ts            # Deterministic risk scores & decisions
+│   │   ├── AnalysisResult.ts        # Comprehensive analysis container for Person 2
 │   │   └── index.ts
 │   │
-│   ├── models/                # Strongly-typed domain models
-│   │   ├── Resource.ts        # Cloud resources (VPC, Subnet, EC2, RDS, etc.)
-│   │   ├── Dependency.ts      # Resource dependency relationships
-│   │   ├── ChangeRequest.ts   # Proposed infrastructure changes
-│   │   ├── TopologyNode.ts    # Graph topology node
-│   │   ├── TopologyEdge.ts    # Graph topology edge
-│   │   ├── ImpactGraph.ts     # Blast radius topology graph
-│   │   ├── SecurityFinding.ts # Security vulnerability models
-│   │   ├── PolicyViolation.ts # Governance & compliance violations
-│   │   ├── RiskResult.ts      # Risk scoring & decisions (SAFE/REVIEW/BLOCK)
-│   │   ├── AnalysisResult.ts  # Unified analysis container
+│   ├── providers/                   # Infrastructure abstraction layer
+│   │   ├── ResourceProvider.ts      # Core abstraction interface
+│   │   ├── MockResourceProvider.ts  # Deterministic 20-resource AWS environment
+│   │   ├── AWSResourceProvider.ts   # AWS SDK v3 client implementation
+│   │   └── index.ts                 # Provider factory with mock/aws mode switching
+│   │
+│   ├── services/                    # Business intelligence & lifecycle services
+│   │   ├── DependencyAnalysisService.ts # Cycle-safe BFS dependency graph traversal
+│   │   ├── TopologyAnalysisService.ts   # Graph generator (affected, critical, external nodes)
+│   │   ├── ChangeRequestService.ts      # Change request CRUD & status management
+│   │   ├── ImpactService.ts             # Impact orchestrator delegating to Topology Engine
+│   │   ├── AnalysisService.ts           # Analysis orchestrator
 │   │   └── index.ts
 │   │
-│   ├── providers/             # Infrastructure abstraction layer
-│   │   ├── ResourceProvider.ts     # Core interface abstraction
-│   │   ├── MockResourceProvider.ts # In-memory AWS cloud topology
-│   │   ├── AWSResourceProvider.ts  # AWS SDK v3 client implementation
-│   │   └── index.ts                # Provider factory (mock vs aws)
-│   │
-│   ├── services/              # Business intelligence & lifecycle services
-│   │   ├── ChangeRequestService.ts # Change request management
-│   │   ├── ImpactService.ts        # Blast radius graph traversal
-│   │   ├── AnalysisService.ts      # Analysis orchestrator (Stage 1 placeholder)
+│   ├── engine/                      # Risk engine contracts (Stage 3 foundation)
+│   │   ├── AnalysisEngine.ts        # Analysis engine interface
 │   │   └── index.ts
 │   │
-│   ├── engine/                # Risk engine contracts (Stage 2 foundation)
-│   │   ├── AnalysisEngine.ts
+│   ├── agents/                      # Multi-agent architecture interfaces
+│   │   ├── BlastRadiusAgent.ts      # Blast radius agent contract
+│   │   ├── SecurityAgent.ts         # Security agent contract
+│   │   ├── PolicyAgent.ts           # Policy agent contract
 │   │   └── index.ts
 │   │
-│   ├── agents/                # Multi-agent architecture interfaces (Stage 2)
-│   │   ├── BlastRadiusAgent.ts
-│   │   ├── SecurityAgent.ts
-│   │   ├── PolicyAgent.ts
+│   ├── routes/                      # Express API route definitions
+│   │   ├── healthRoutes.ts          # GET /api/health
+│   │   ├── requestRoutes.ts         # /api/requests endpoints
+│   │   ├── resourceRoutes.ts        # /api/resources endpoints
 │   │   └── index.ts
 │   │
-│   ├── routes/                # Express API route definitions
-│   │   ├── healthRoutes.ts
-│   │   ├── requestRoutes.ts
+│   ├── handlers/                    # API Controllers & AWS Lambda bridge
+│   │   ├── healthHandler.ts         # Health check response handler
+│   │   ├── requestHandler.ts        # Request CRUD, impact, and analyze handlers
+│   │   ├── resourceHandler.ts       # Resource lookup & dependency handlers
+│   │   ├── lambda.ts                # AWS Lambda handler (serverless-http)
 │   │   └── index.ts
 │   │
-│   ├── handlers/              # Route controller handlers & Lambda bridge
-│   │   ├── healthHandler.ts
-│   │   ├── requestHandler.ts
-│   │   ├── lambda.ts          # AWS Lambda entrypoint (serverless-http)
-│   │   └── index.ts
-│   │
-│   └── utils/                 # Validation, errors, and responses
-│       ├── errors.ts          # AppError hierarchy with HTTP status codes
-│       ├── validation.ts      # Zod request validation
-│       ├── response.ts        # Standardized API response envelope
-│       ├── logger.ts          # Structured logger
+│   └── utils/                       # Validation, errors, and responses
+│       ├── errors.ts                # Standard AppError hierarchy with HTTP codes
+│       ├── validation.ts            # Zod schema validation
+│       ├── response.ts              # Consistent JSON success & error envelopes
+│       ├── logger.ts                # Structured logger
 │       └── index.ts
 │
-└── tests/                     # Unit and integration test suite
-    ├── health.test.ts         # Health & discovery endpoint tests
-    ├── validation.test.ts     # Request validation & error formatting tests
-    ├── requests.test.ts       # ChangeRequest, Impact, & Analyze tests
-    └── mockProvider.test.ts   # MockResourceProvider topology tests
+└── tests/                           # Vitest automated test suite
+    ├── health.test.ts               # Health & discovery endpoint tests
+    ├── validation.test.ts           # Input validation & error format tests
+    ├── requests.test.ts             # ChangeRequest, Impact, & Analyze tests
+    ├── mockProvider.test.ts         # MockResourceProvider topology tests
+    ├── stage2.dependencyEngine.test.ts # Cycle prevention & 11/3/2 derivation tests
+    └── stage2.api.test.ts           # Resource API & Impact API endpoint tests
 ```
 
 ---
 
-## Key Features in Stage 1
+## Mock AWS Environment (20 Resources)
 
-1. **Strict ResourceProvider Abstraction**:
-   - decouples application logic from direct AWS SDK calls.
-   - `MockResourceProvider` delivers realistic production AWS topology (VPC, Subnets, EC2, RDS, ALB, Lambda, S3, IAM, SecurityGroups).
-   - Zero AWS credentials required for local development when `BLASTGUARD_MODE=mock`.
+The deterministic mock environment models a production payment processing subsystem alongside an order management subsystem:
 
-2. **Domain Models**:
-   - Complete type safety covering 10 AWS resource types (`VPC`, `Subnet`, `EC2`, `ECS`, `RDS`, `Lambda`, `S3`, `IAM`, `LoadBalancer`, `SecurityGroup`).
-   - Change requests with actions (`CREATE`, `UPDATE`, `DELETE`), environments (`DEV`, `STAGING`, `PRODUCTION`), and statuses (`PENDING`, `ANALYZING`, `SAFE`, `REVIEW`, `BLOCKED`, `FAILED`).
-   - Full contracts for `ImpactGraph`, `SecurityFinding`, `PolicyViolation`, `RiskResult`, and `AnalysisResult`.
-
-3. **RESTful API Foundation**:
-   - `GET /api/health`
-   - `POST /api/requests`
-   - `GET /api/requests`
-   - `GET /api/requests/:requestId`
-   - `POST /api/requests/:requestId/analyze`
-   - `GET /api/requests/:requestId/impact`
-
-4. **Robust Input Validation & Error Handling**:
-   - Payloads validated via Zod schemas.
-   - Consistent error envelope with `error.code`, `error.message`, and `error.details`.
-
-5. **Serverless & Local Ready**:
-   - Runs locally with `npm run dev` or `npm start`.
-   - Ready for AWS SAM local / Lambda API Gateway via `dist/handlers/lambda.handler` and `template.yaml`.
+| ID | Name | Type | Criticality | Environment | Role / Description |
+|---|---|---|---|---|---|
+| `vpc-prod` | `vpc-prod` | VPC | HIGH | PRODUCTION | Production primary VPC (10.0.0.0/16) |
+| `subnet-07` | `subnet-07` | Subnet | **CRITICAL** | PRODUCTION | **Target demo resource**: Private payment subnet in `ap-south-1` |
+| `subnet-08` | `subnet-08` | Subnet | HIGH | PRODUCTION | Private database subnet for order datastores |
+| `subnet-public` | `subnet-public` | Subnet | HIGH | PRODUCTION | Ingress public subnet for load balancers |
+| `production-load-balancer` | `production-load-balancer` | LoadBalancer | HIGH | PRODUCTION | **External Dependency #1**: Public-facing ALB routing to `payment-api` |
+| `payment-security-group` | `payment-security-group` | SecurityGroup | HIGH | PRODUCTION | Firewall rules protecting payment compute workloads |
+| `payment-api` | `payment-api` | ECS | **CRITICAL** | PRODUCTION | **Critical Service #1**: Primary payment processing container service |
+| `payment-worker` | `payment-worker` | EC2 | **CRITICAL** | PRODUCTION | **Critical Service #2**: EC2 payment reconciliation batch worker |
+| `payment-db` | `payment-db` | RDS | HIGH | PRODUCTION | PostgreSQL transactional database storing payment records |
+| `payment-notifier` | `payment-notifier` | Lambda | **CRITICAL** | PRODUCTION | **Critical Service #3**: Serverless payment webhook & customer alert dispatcher |
+| `payment-data-bucket` | `payment-data-bucket` | S3 | HIGH | PRODUCTION | S3 bucket storing encrypted transaction archives & receipts |
+| `iam-payment-role` | `iam-payment-role` | IAM | HIGH | PRODUCTION | IAM execution role assumed by payment workloads |
+| `external-payment-gateway` | `external-payment-gateway` | External | HIGH | PRODUCTION | **External Dependency #2**: External banking settlement partner endpoint |
+| `order-service` | `order-service` | ECS | HIGH | PRODUCTION | Upstream checkout client service calling `payment-api` |
+| `order-db` | `order-db` | RDS | HIGH | PRODUCTION | Database for customer orders (in `subnet-08`) |
+| `order-security-group` | `order-security-group` | SecurityGroup | MEDIUM | PRODUCTION | Security group protecting order datastores |
+| `order-data-bucket` | `order-data-bucket` | S3 | MEDIUM | PRODUCTION | S3 bucket for purchase orders |
+| `iam-order-role` | `iam-order-role` | IAM | HIGH | PRODUCTION | IAM role for order containers |
+| `notification-service` | `notification-service` | Lambda | MEDIUM | PRODUCTION | Standalone notification lambda |
+| `alb-security-group` | `alb-security-group` | SecurityGroup | HIGH | PRODUCTION | Ingress security group for ALB |
 
 ---
 
-## Getting Started
+## Dependency Engine & Traversal Rules
 
-### Prerequisites
-- Node.js (v20.x or later)
-- npm (v10.x or later)
+The dependency engine (`DependencyAnalysisService`) executes graph traversal with:
+- **Visited-node tracking** preventing duplicate counting.
+- **Safe cycle handling** handling circular dependency paths (e.g. `payment-api` ↔ `payment-notifier`).
+- **Boundary-aware propagation** correctly separating container hierarchies and upstream caller subsystems.
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/Akansh475/AWS_Blastguard.git
-cd AWS_Blastguard
-
-# Install dependencies
-npm install
-```
-
-### Environment Configuration
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
-```
-
-Default variables:
-```ini
-AWS_REGION=ap-south-1
-BLASTGUARD_MODE=mock
-FRONTEND_URL=http://localhost:5173
-PORT=3000
-```
-
-### Development Server
-Run the local HTTP server with automatic restart:
-```bash
-npm run dev
-```
-The server will start at `http://localhost:3000`.
-
-### Building for Production
-```bash
-npm run build
-```
-Compiles TypeScript into `./dist`.
-
-### Running Tests
-Execute the comprehensive test suite with Vitest:
-```bash
-npm test
-```
-
-### Running with AWS SAM Local
-To run the Lambda function locally using AWS SAM CLI:
-```bash
-# Build TypeScript
-npm run build
-
-# Start SAM local API
-sam local start-api
-```
+### The `DELETE subnet-07` Proof
+For `DELETE subnet-07`, the graph traversal naturally derives:
+- **11 Affected Resources**: `subnet-07`, `payment-api`, `payment-worker`, `payment-db`, `payment-notifier`, `payment-security-group`, `payment-data-bucket`, `iam-payment-role`, `order-service`, `production-load-balancer`, `external-payment-gateway`.
+- **3 Critical Services**: `payment-api` (ECS), `payment-worker` (EC2), `payment-notifier` (Lambda).
+- **2 External Dependencies**: `production-load-balancer` (internet-facing ALB), `external-payment-gateway` (partner banking API).
 
 ---
 
 ## API Summary
-
-Detailed request/response schemas can be found in [`API_CONTRACT.md`](./API_CONTRACT.md).
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -192,21 +149,41 @@ Detailed request/response schemas can be found in [`API_CONTRACT.md`](./API_CONT
 | `POST` | `/api/requests` | Propose a new infrastructure change request |
 | `GET` | `/api/requests` | List all proposed change requests |
 | `GET` | `/api/requests/:requestId` | Fetch details of a specific change request |
-| `GET` | `/api/requests/:requestId/impact` | Retrieve blast radius and dependency graph |
-| `POST` | `/api/requests/:requestId/analyze` | Trigger infrastructure safety analysis (Stage 1 placeholder) |
+| `GET` | `/api/requests/:requestId/impact` | Retrieve blast radius topology graph (`affectedNodes`, `criticalNodes`, `externalNodes`) |
+| `POST` | `/api/requests/:requestId/analyze` | Trigger infrastructure safety analysis |
+| `GET` | `/api/resources/:resourceId` | Fetch resource by ID from provider (404 if absent) |
+| `GET` | `/api/resources` | List all 20 resources in the mock environment |
+| `GET` | `/api/resources/:resourceId/dependencies` | List direct dependencies for a resource |
 
 ---
 
-## What Stage 2 Will Build On
+## Running Locally
 
-Stage 1 establishes the clean contracts and interfaces needed for upcoming modules:
-1. **Multi-Agent Intelligence Engine (`src/engine/AnalysisEngine.ts`)**:
-   - Stage 2 will implement deep deterministic risk score formulas (0-100) combining blast radius, resource criticality, and environment tier.
-2. **Specialized Agents (`src/agents/`)**:
-   - `BlastRadiusAgent`: Multi-hop recursive graph traversal and cross-VPC peering/transit gateway analysis.
-   - `SecurityAgent`: Evaluation of IAM least privilege, open security group ports (e.g. 0.0.0.0/0 ingress), and public S3 bucket policies.
-   - `PolicyAgent`: Compliance rules (e.g. multi-AZ requirements, production deletion protection, backup policies).
-3. **AWS Live Scanning (`src/providers/AWSResourceProvider.ts`)**:
-   - Expansion of AWS SDK v3 callers to ingest real AWS environments when `BLASTGUARD_MODE=aws`.
-4. **Data Contract Stability**:
-   - Frontend and integration developers (Person 2) can safely integrate against `API_CONTRACT.md` today. Stage 2 will populate the `securityFindings`, `policyViolations`, and `recommendations` fields without breaking schema contracts.
+```bash
+# Install dependencies
+npm install
+
+# Run test suite (34 tests passing)
+npm test
+
+# Run build
+npm run build
+
+# Start local dev server
+npm run dev
+```
+
+---
+
+## What Stage 3 Should Build On
+
+Stage 2 completes the deterministic infrastructure topology engine and mock AWS environment. Stage 3 will build on this:
+1. **Deterministic Risk Scoring Engine (`src/engine/AnalysisEngine.ts`)**:
+   - Calculate deterministic risk scores (0–100) combining blast radius (`11`), criticality (`3` critical services), and external exposure (`2` external dependencies).
+   - Authoritative decision logic (`SAFE`, `REVIEW`, `BLOCK`).
+2. **Policy Evaluation Engine**:
+   - Rules prohibiting deletion of subnets containing active RDS databases or production ALB target groups.
+3. **Security Analysis Engine**:
+   - Ingress boundary violation detection and IAM scope verification.
+4. **Bedrock AI Integration**:
+   - Natural language explanations and remediation guidance synthesized from the deterministic graph.

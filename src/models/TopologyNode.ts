@@ -2,10 +2,12 @@ import { Criticality, Environment, ResourceType } from './Resource';
 
 export interface TopologyNode {
   id: string;
-  label: string;
+  name: string;
   type: ResourceType;
-  criticality: Criticality;
   environment: Environment;
-  region: string;
+  criticality: Criticality;
+  label?: string;
+  region?: string;
+  isExternal?: boolean;
   data?: Record<string, unknown>;
 }

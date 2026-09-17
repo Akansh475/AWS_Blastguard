@@ -8,7 +8,8 @@ export type ResourceType =
   | 'S3'
   | 'IAM'
   | 'LoadBalancer'
-  | 'SecurityGroup';
+  | 'SecurityGroup'
+  | 'External';
 
 export type Criticality = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
@@ -21,6 +22,7 @@ export interface Resource {
   region: string;
   environment: Environment;
   criticality: Criticality;
+  isExternal?: boolean;
   arn?: string;
   tags?: Record<string, string>;
   metadata?: Record<string, unknown>;
@@ -37,6 +39,7 @@ export const VALID_RESOURCE_TYPES: ResourceType[] = [
   'IAM',
   'LoadBalancer',
   'SecurityGroup',
+  'External',
 ];
 
 export const VALID_ENVIRONMENTS: Environment[] = ['DEV', 'STAGING', 'PRODUCTION'];

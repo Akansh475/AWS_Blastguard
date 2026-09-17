@@ -41,10 +41,10 @@ describe('MockResourceProvider', () => {
     const deps = await provider.getDependencies('subnet-07');
     expect(deps.length).toBeGreaterThan(0);
 
-    const connectedIds = deps.flatMap((d) => [d.sourceResourceId, d.targetResourceId]);
+    const connectedIds = deps.flatMap((d) => [d.source, d.target, d.sourceResourceId, d.targetResourceId]);
     expect(connectedIds).toContain('subnet-07');
-    expect(connectedIds).toContain('ec2-order-processor');
-    expect(connectedIds).toContain('rds-main-postgres');
+    expect(connectedIds).toContain('payment-api');
+    expect(connectedIds).toContain('payment-worker');
   });
 
   it('getTopology returns a comprehensive graph of the infrastructure', async () => {
