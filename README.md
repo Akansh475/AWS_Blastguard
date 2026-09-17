@@ -163,7 +163,7 @@ For `DELETE subnet-07`, the graph traversal naturally derives:
 # Install dependencies
 npm install
 
-# Run test suite (34 tests passing)
+# Run test suite (40 tests passing)
 npm test
 
 # Run build
@@ -175,15 +175,31 @@ npm run dev
 
 ---
 
-## What Stage 3 Should Build On
+## Stage 3 Security & Policy Engine
 
-Stage 2 completes the deterministic infrastructure topology engine and mock AWS environment. Stage 3 will build on this:
-1. **Deterministic Risk Scoring Engine (`src/engine/AnalysisEngine.ts`)**:
-   - Calculate deterministic risk scores (0–100) combining blast radius (`11`), criticality (`3` critical services), and external exposure (`2` external dependencies).
-   - Authoritative decision logic (`SAFE`, `REVIEW`, `BLOCK`).
-2. **Policy Evaluation Engine**:
-   - Rules prohibiting deletion of subnets containing active RDS databases or production ALB target groups.
-3. **Security Analysis Engine**:
-   - Ingress boundary violation detection and IAM scope verification.
-4. **Bedrock AI Integration**:
-   - Natural language explanations and remediation guidance synthesized from the deterministic graph.
+Stage 3 implements complete deterministic infrastructure intelligence without AI or LLM determination:
+
+1. **Security Analysis (`SecurityAnalysisService`)**:
+   - Analyzes real infrastructure conditions: Production environments, critical databases (`payment-db`), network boundaries (`subnet-07`), Security Groups (`payment-security-group`), IAM roles (`iam-payment-role`), public exposure (`production-load-balancer`), and sensitive storage (`payment-data-bucket`).
+   - Emits structured `SecurityFinding[]` with `id`, `severity`, `title`, `description`, and `resourceId`.
+2. **Policy Engine (`PolicyAnalysisService`)**:
+   - **`POLICY-001`**: Production infrastructure changes require approval.
+   - **`POLICY-002`**: Critical resources cannot be deleted automatically.
+   - **`POLICY-003`**: Resources with critical downstream dependencies require review.
+   - **`POLICY-004`**: Changes affecting external dependencies require additional approval.
+   - Emits structured `PolicyViolation[]` with `policyId`, `severity`, `message`, and `resourceId`.
+3. **Blast Radius Service (`BlastRadiusService`)**:
+   - Combines `DependencyAnalysisService`, `ImpactAnalysisService`, `SecurityAnalysisService`, and `PolicyAnalysisService`.
+   - Pipeline: `ChangeRequest → ResourceProvider → Dependency analysis → Topology → Security → Impact → Policy → BlastRadius`.
+   - Produces `directImpact`, `indirectImpact`, `totalAffected`, `criticalServices`, `externalDependencies`, `productionImpact`, `securityRisk`, and `policyViolations`.
+
+---
+
+## What Stage 4 Should Build On
+
+Stage 3 supplies all deterministic facts, security findings, and policy violations. Stage 4 will build:
+1. **Risk Engine (`RiskEngine` / `AnalysisEngine`)**:
+   - Synthesize composite deterministic risk scores (0–100) weighting blast radius (`11`), critical compute services (`3`), external attack surfaces (`2`), security risk level (`CRITICAL`), and policy violations (`4`).
+   - Deliver definitive `SAFE` / `REVIEW` / `BLOCK` decision enforcement.
+2. **AI / Bedrock Remediation Layer (Optional / Final Stage)**:
+   - Provide executive summaries and remediation scripts grounded in the deterministic findings.

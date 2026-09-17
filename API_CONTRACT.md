@@ -395,31 +395,140 @@ For `DELETE subnet-07`:
 ---
 
 ### 2.6 Trigger Analysis for Change Request
-Initiate infrastructure safety analysis. In Stage 2, calculates blast radius and evaluates placeholder risk metrics.
+Initiate comprehensive infrastructure safety analysis. In Stage 3, executes the pipeline:
+`ChangeRequest → ResourceProvider → Dependency analysis → Topology → Security → Impact → Policy → BlastRadius`.
+Populates real `securityFindings` and `policyViolations` completely deterministically without AI.
 
 - **Method**: `POST`
 - **Route**: `/api/requests/:requestId/analyze`
 
 #### Success Response (200 OK)
+For `DELETE subnet-07`:
 ```json
 {
   "data": {
     "id": "an-cr-a1b2c3d4",
     "requestId": "cr-a1b2c3d4",
-    "status": "REVIEW",
-    "decision": "REVIEW",
-    "riskScore": 85,
-    "riskLevel": "HIGH",
+    "status": "BLOCKED",
+    "decision": "BLOCK",
+    "riskScore": 95,
+    "riskLevel": "CRITICAL",
     "blastRadius": 11,
-    "impactGraph": { ... },
-    "securityFindings": [],
-    "policyViolations": [],
-    "summary": "Stage 1/2 baseline analysis for DELETE on Subnet (subnet-07) in PRODUCTION. Direct dependencies: 2, total blast radius: 11 resources.",
-    "recommendations": [
-      "Assess the 2 directly connected resources before executing DELETE.",
-      "Full Stage 3 intelligence engine with multi-agent Bedrock analysis will compute deep policy/security checks."
+    "impactGraph": {
+      "rootResourceId": "subnet-07",
+      "blastRadiusCount": 11,
+      "directImpactCount": 2,
+      "indirectImpactCount": 8,
+      "criticalServicesCount": 3,
+      "externalDependenciesCount": 2,
+      "affectedNodes": [...],
+      "criticalNodes": [...],
+      "externalNodes": [...]
+    },
+    "securityFindings": [
+      {
+        "id": "sec-prod-boundary-subnet-07",
+        "severity": "HIGH",
+        "title": "Production Network Boundary Disruption",
+        "description": "Target resource subnet-07 operates in PRODUCTION and encapsulates mission-critical infrastructure.",
+        "resourceId": "subnet-07"
+      },
+      {
+        "id": "sec-net-isolation-subnet-07",
+        "severity": "CRITICAL",
+        "title": "Hosted Workload Network Isolation",
+        "description": "Deleting subnet-07 removes network interfaces (ENIs) for 2 hosted compute service(s).",
+        "resourceId": "subnet-07"
+      },
+      {
+        "id": "sec-db-disruption-payment-db",
+        "severity": "CRITICAL",
+        "title": "Transactional Database Connectivity Severed",
+        "description": "Database payment-db (RDS) will lose network and client connectivity, risking transactional data pipeline failures.",
+        "resourceId": "payment-db"
+      },
+      {
+        "id": "sec-ingress-exposure-production-load-balancer",
+        "severity": "HIGH",
+        "title": "Public Ingress Gateway Disruption",
+        "description": "Internet-facing entrypoint production-load-balancer will fail health checks and produce 502/504 gateway failures to public users.",
+        "resourceId": "production-load-balancer"
+      },
+      {
+        "id": "sec-ext-partner-external-payment-gateway",
+        "severity": "HIGH",
+        "title": "External Partner Integration Severed",
+        "description": "External banking/partner integration external-payment-gateway will experience ungraceful connection drops and transaction timeouts.",
+        "resourceId": "external-payment-gateway"
+      },
+      {
+        "id": "sec-sg-orphaned-payment-security-group",
+        "severity": "MEDIUM",
+        "title": "Security Group Firewall Boundary Severed",
+        "description": "Firewall rules in payment-security-group will be detached and orphaned from runtime workloads.",
+        "resourceId": "payment-security-group"
+      },
+      {
+        "id": "sec-iam-severed-iam-payment-role",
+        "severity": "HIGH",
+        "title": "IAM Execution Role Context Interrupted",
+        "description": "Execution privilege context iam-payment-role will be severed from application workloads.",
+        "resourceId": "iam-payment-role"
+      },
+      {
+        "id": "sec-storage-pipeline-payment-data-bucket",
+        "severity": "HIGH",
+        "title": "Sensitive Storage Ingestion Pipeline Halt",
+        "description": "Audit and compliance data storage in payment-data-bucket will be interrupted as writers lose execution access.",
+        "resourceId": "payment-data-bucket"
+      }
     ],
-    "analyzedAt": "2026-09-17T08:00:05.123Z"
+    "policyViolations": [
+      {
+        "policyId": "POLICY-001",
+        "policyName": "Production Change Governance",
+        "severity": "HIGH",
+        "message": "Production infrastructure changes require formal approval before application. Target subnet-07 is in PRODUCTION.",
+        "resourceId": "subnet-07"
+      },
+      {
+        "policyId": "POLICY-002",
+        "policyName": "Critical Resource Deletion Guardrail",
+        "severity": "CRITICAL",
+        "message": "Critical resource subnet-07 (Subnet) cannot be deleted automatically. Manual change approval required.",
+        "resourceId": "subnet-07"
+      },
+      {
+        "policyId": "POLICY-003",
+        "policyName": "Critical Dependency Review Guardrail",
+        "severity": "CRITICAL",
+        "message": "Changes to subnet-07 affect 3 critical downstream service(s) (payment-api, payment-worker, payment-notifier) and require mandatory architectural review.",
+        "resourceId": "subnet-07"
+      },
+      {
+        "policyId": "POLICY-004",
+        "policyName": "External Attack Surface & Dependency Protection",
+        "severity": "HIGH",
+        "message": "Changes to subnet-07 affect 2 external-facing dependency(ies) (production-load-balancer, external-payment-gateway) and require external gateway approval.",
+        "resourceId": "subnet-07"
+      }
+    ],
+    "summary": "Deterministic analysis for DELETE on Subnet (subnet-07) in PRODUCTION. Total affected: 11, critical services: 3, external dependencies: 2, security risk: CRITICAL. Policy violations: 4.",
+    "recommendations": [
+      "[POLICY-001] Resolve: Production infrastructure changes require formal approval before application. Target subnet-07 is in PRODUCTION.",
+      "[POLICY-002] Resolve: Critical resource subnet-07 (Subnet) cannot be deleted automatically. Manual change approval required.",
+      "[POLICY-003] Resolve: Changes to subnet-07 affect 3 critical downstream service(s) (payment-api, payment-worker, payment-notifier) and require mandatory architectural review.",
+      "[POLICY-004] Resolve: Changes to subnet-07 affect 2 external-facing dependency(ies) (production-load-balancer, external-payment-gateway) and require external gateway approval.",
+      "Coordinate maintenance windows for 2 external dependencies: production-load-balancer, external-payment-gateway.",
+      "Architectural review mandatory for 3 critical services: payment-api, payment-worker, payment-notifier."
+    ],
+    "analyzedAt": "2026-09-17T08:00:05.123Z",
+    "metadata": {
+      "stage": 3,
+      "productionImpact": true,
+      "securityRisk": "CRITICAL",
+      "policiesPassed": false
+    }
   }
 }
 ```

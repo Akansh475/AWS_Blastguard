@@ -3,3 +3,7 @@ export * from './ImpactService';
 export * from './AnalysisService';
 export * from './DependencyAnalysisService';
 export * from './TopologyAnalysisService';
+export * from './ImpactAnalysisService';
+export * from './SecurityAnalysisService';
+export * from './PolicyAnalysisService';
+export * from './BlastRadiusService';

@@ -5,7 +5,8 @@ export interface SecurityFinding {
   severity: FindingSeverity;
   title: string;
   description: string;
-  affectedResourceId: string;
+  resourceId: string;
+  affectedResourceId?: string;
   remediation?: string;
   ruleId?: string;
 }
