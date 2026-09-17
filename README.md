@@ -4,7 +4,7 @@
 
 BlastGuard is an infrastructure safety system for AWS. An engineer proposes an infrastructure modification such as `DELETE subnet-07`. BlastGuard analyzes what depends on the resource, what downstream workloads could be affected, security implications, policy violations, blast radius, deterministic risk scores, and delivers an authoritative **SAFE / REVIEW / BLOCK** decision before changes hit production.
 
-This repository contains **STAGES 1, 2, 3 & 4: Core Infrastructure Intelligence, Topology Engine, Security & Policy Engine, Deterministic Risk & Decision Engine, and Multi-Agent Architecture**.
+This repository contains **STAGES 1, 2, 3, 4 & 5: Core Infrastructure Intelligence, Topology Engine, Security & Policy Engine, Deterministic Risk & Decision Engine, Multi-Agent Architecture, Real AWS Provider & Hardening**.
 
 ---
 
@@ -14,9 +14,11 @@ BlastGuard adheres strictly to the architectural rule: **`API → Service → Re
 
 ```
 AWS_Blastguard/
-├── .env.example                     # Environment template (ap-south-1, mock mode)
+├── .env.example                     # Environment template (ap-south-1, mock/aws mode)
 ├── .gitignore                       # Standard ignore rules
 ├── API_CONTRACT.md                  # Comprehensive API data contracts & schemas
+├── ARCHITECTURE.md                  # Detailed system architecture & pipeline flows
+├── HANDOFF.md                       # Complete integration handoff guide for Person 2
 ├── README.md                        # System documentation & setup guide
 ├── package.json                     # Dependencies, build & test scripts
 ├── template.yaml                    # AWS SAM template (Lambda + API Gateway)
@@ -94,7 +96,7 @@ AWS_Blastguard/
 │       ├── logger.ts                # Structured logger
 │       └── index.ts
 │
-└── tests/                           # Vitest automated test suite (51 tests)
+└── tests/                           # Vitest automated test suite (70 tests)
     ├── health.test.ts               # Health & discovery endpoint tests
     ├── validation.test.ts           # Input validation & error format tests
     ├── requests.test.ts             # ChangeRequest, Impact, & Analyze tests
@@ -102,7 +104,8 @@ AWS_Blastguard/
     ├── stage2.dependencyEngine.test.ts # Cycle prevention & 11/3/2 derivation tests
     ├── stage2.api.test.ts           # Resource API & Impact API endpoint tests
     ├── stage3.securityPolicyBlastRadius.test.ts # Security findings & policy tests
-    └── stage4.riskDecisionAgents.test.ts # Risk engine, decision engine, & agent pipeline tests
+    ├── stage4.riskDecisionAgents.test.ts # Risk engine, decision engine, & agent pipeline tests
+    └── stage5.awsProvider.test.ts   # AWS SDK discovery, mode switching, error handling & regression tests
 ```
 
 ---
@@ -173,7 +176,7 @@ For `DELETE subnet-07`, the graph traversal naturally derives:
 # Install dependencies
 npm install
 
-# Run test suite (51 tests passing)
+# Run test suite (70 tests passing)
 npm test
 
 # Run build
@@ -261,4 +264,33 @@ The `POST /api/requests/:requestId/analyze` endpoint outputs the complete `Analy
 - `policyViolations`: structured governance policy violations
 - `dependencies`: raw dependency relationships
 - `topology`: `{ nodes, edges }` for diagram visualization
+
+---
+
+## Stage 5 Real AWS Provider, Mode Switching & Hardening
+
+Stage 5 brings full dual-mode capability, strict safety guarantees, and hardened integration readiness:
+
+### 1. Dual-Mode Provider Architecture
+- **Mock Mode (`BLASTGUARD_MODE=mock`)**: Zero-dependency deterministic environment simulating 20 realistic AWS resources. Guarantees the canonical benchmark test:
+  `DELETE subnet-07` $\rightarrow$ `riskScore=87`, `severity=CRITICAL`, `decision=BLOCK`, `affectedResources=11`, `criticalServices=3`, `externalDependencies=2`.
+- **AWS Mode (`BLASTGUARD_MODE=aws`)**: Live discovery using AWS SDK v3 (`@aws-sdk/client-*`) across VPC, Subnet, EC2, Security Groups, RDS, Lambda, ECS, S3, IAM, and Load Balancers.
+- **Provider Factory Boundary**: Switch modes seamlessly via environment variables without altering analysis logic or agent code.
+
+### 2. Strict Read-Only Safety Assurance
+BlastGuard is strictly a pre-change safety gate, NEVER an execution engine.
+- Under NO circumstances are mutating operations (`Delete*`, `Terminate*`, `Create*`, `Update*`, `Modify*`) permitted in the AWS provider.
+- Verified by automated prototype inspection tests.
+
+### 3. Error Handling & Secret Protection
+- **No Credentials in Code**: Uses standard AWS SDK credential provider chain (IAM roles / environment variables).
+- **Sanitized AWS Errors**: Missing credentials, `AccessDenied`, `ResourceNotFound`, timeouts, and service unavailability are mapped to structured error envelopes without leaking AWS internal stack traces or secrets.
+
+### 4. High-Performance Per-Analysis Caching
+- An in-memory cache (TTL 60s) avoids repeated AWS API calls during graph traversal and prevents rate limiting.
+
+### 5. Architectural Reference & Person 2 Handoff
+- See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full pipeline flowcharts and design patterns.
+- See [`HANDOFF.md`](HANDOFF.md) for endpoint schemas, cURL examples, and UI integration guides.
+
 

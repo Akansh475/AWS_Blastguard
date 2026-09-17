@@ -2,7 +2,7 @@
 
 > **Core statement**: *"Before you change production, know what will break."*
 
-This document defines the strict HTTP API interface, payload schemas, and data models for BlastGuard Core Infrastructure Intelligence (Stage 4: Risk Engine, Decision Engine, and Agent Architecture). All endpoints follow REST conventions and return JSON responses.
+This document defines the strict HTTP API interface, payload schemas, and data models for BlastGuard Core Infrastructure Intelligence (Stage 5: Real AWS Provider, Hardening & Final Handoff). Both `BLASTGUARD_MODE=mock` and `BLASTGUARD_MODE=aws` adhere strictly to these identical data contracts. All endpoints follow REST conventions and return standard JSON responses.
 
 ---
 
@@ -702,8 +702,8 @@ interface TopologyEdge {
 }
 ```
 
-### 3.3 AnalysisResult (Stage 4 Contract)
-The finalized data contract returned by `/api/requests/:requestId/analyze` consumed by Person 2 (Frontend / Visualization):
+### 3.3 AnalysisResult (Stage 5 Final Contract)
+The finalized data contract returned by `POST /api/requests/:requestId/analyze` consumed by Person 2 (Frontend / Visualization):
 
 ```typescript
 export type RiskDecision = 'SAFE' | 'REVIEW' | 'BLOCK';
@@ -724,7 +724,7 @@ export interface AnalysisTopology {
 }
 
 export interface AnalysisResult {
-  // Required Stage 4 finalized contract fields for Person 2
+  // Required Stage 4/5 finalized contract fields for Person 2
   requestId: string;
   resourceId: string;
   riskScore: number;
@@ -752,4 +752,141 @@ export interface AnalysisResult {
   metadata?: Record<string, unknown>;
 }
 ```
+
+### 3.4 Resource
+The standardized representation of an AWS infrastructure component across both Mock and Real AWS modes:
+
+```typescript
+export type ResourceType =
+  | 'VPC'
+  | 'Subnet'
+  | 'EC2'
+  | 'ECS'
+  | 'RDS'
+  | 'Lambda'
+  | 'S3'
+  | 'IAM'
+  | 'LoadBalancer'
+  | 'SecurityGroup'
+  | 'External';
+
+export type Criticality = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type Environment = 'DEV' | 'STAGING' | 'PRODUCTION';
+
+export interface Resource {
+  id: string;                         // e.g. 'subnet-07', 'vpc-prod', 'payment-api'
+  name: string;                       // Human-readable identifier
+  type: ResourceType;                 // AWS or external type enum
+  region: string;                     // e.g. 'ap-south-1'
+  environment: Environment;           // 'DEV' | 'STAGING' | 'PRODUCTION'
+  criticality: Criticality;           // 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  isExternal?: boolean;               // True for partner endpoints or internet-facing ALBs
+  arn?: string;                       // Standard AWS ARN
+  tags?: Record<string, string>;      // AWS tag key-value pairs
+  metadata?: Record<string, unknown>; // Service-specific properties (cidrBlock, vpcId, etc.)
+}
+```
+
+### 3.5 Dependency
+Defines a directional or hosting relationship between two AWS infrastructure resources:
+
+```typescript
+export type DependencyRelationship =
+  | 'HOSTS'
+  | 'DEPENDS_ON'
+  | 'CONNECTS_TO'
+  | 'USES'
+  | 'ROUTES_TO'
+  | 'PROTECTED_BY'
+  | 'STORES_IN'
+  | 'CALLS'
+  | 'CONTAINS'
+  | 'ATTACHED_TO'
+  | 'SECURED_BY'
+  | 'PERMITS';
+
+export interface Dependency {
+  source: string;                     // Source resource ID
+  target: string;                     // Target resource ID
+  sourceResourceId?: string;          // Alias for source
+  targetResourceId?: string;          // Alias for target
+  relationship: DependencyRelationship;
+  direct?: boolean;                   // Direct vs indirect connection
+  criticality?: Criticality;          // Criticality of the connection
+  bidirectional?: boolean;            // Whether connection implies mutual coupling
+  description?: string;               // Human-readable explanation
+  metadata?: Record<string, unknown>; // Relationship metadata
+}
+```
+
+### 3.6 ChangeRequest
+The proposed modification submitted for deterministic safety analysis:
+
+```typescript
+export type ChangeAction = 'CREATE' | 'UPDATE' | 'DELETE';
+export type ChangeStatus = 'PENDING' | 'ANALYZING' | 'SAFE' | 'REVIEW' | 'BLOCKED';
+
+export interface ChangeRequest {
+  id: string;                         // Auto-generated UUID
+  action: ChangeAction;               // 'CREATE' | 'UPDATE' | 'DELETE'
+  resourceId: string;                 // Target resource ID (e.g. 'subnet-07')
+  resourceType: ResourceType;         // Target resource type
+  region: string;                     // Target AWS region
+  environment: Environment;           // 'DEV' | 'STAGING' | 'PRODUCTION'
+  status: ChangeStatus;               // Current lifecycle status
+  createdAt: string;                  // ISO 8601 timestamp
+  updatedAt: string;                  // ISO 8601 timestamp
+  details?: Record<string, unknown>;  // Optional metadata / reason
+}
+```
+
+### 3.7 SecurityFinding
+A deterministic security risk discovered by analyzing infrastructure topology and boundaries:
+
+```typescript
+export interface SecurityFinding {
+  id: string;                         // e.g. 'sec-db-disruption-payment-db'
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  title: string;                      // Concise summary of vulnerability
+  description: string;                // Detailed technical explanation
+  resourceId: string;                 // Affected resource ID
+  metadata?: Record<string, unknown>; // Finding context
+}
+```
+
+### 3.8 PolicyViolation
+A governance guardrail or compliance rule violation evaluated by the Policy Agent:
+
+```typescript
+export interface PolicyViolation {
+  policyId: string;                   // e.g. 'POLICY-001', 'POLICY-002', 'POLICY-003', 'POLICY-004'
+  policyName: string;                 // Policy display name
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  message: string;                    // Concrete violation reason
+  resourceId: string;                 // Non-compliant resource ID
+  metadata?: Record<string, unknown>; // Policy metadata
+}
+```
+
+### 3.9 RiskResult
+The mathematical breakdown and risk metrics calculated by `RiskEngine`:
+
+```typescript
+export interface RiskFactors {
+  dependencyRisk: number;             // 0 - 25 points
+  criticalityRisk: number;            // 0 - 25 points
+  securityRisk: number;               // 0 - 20 points
+  policyRisk: number;                 // 0 - 20 points
+  environmentRisk: number;            // 0 - 10 points
+}
+
+export interface RiskResult {
+  riskScore: number;                  // Clamped 0 - 100
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  decision: 'SAFE' | 'REVIEW' | 'BLOCK';
+  factors: RiskFactors;
+  riskBreakdown: RiskBreakdown;
+}
+```
+
 

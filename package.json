@@ -24,6 +24,12 @@
   "homepage": "https://github.com/Akansh475/AWS_Blastguard#readme",
   "dependencies": {
     "@aws-sdk/client-ec2": "^3.1134.0",
+    "@aws-sdk/client-ecs": "^3.1134.0",
+    "@aws-sdk/client-elastic-load-balancing-v2": "^3.1134.0",
+    "@aws-sdk/client-iam": "^3.1134.0",
+    "@aws-sdk/client-lambda": "^3.1134.0",
+    "@aws-sdk/client-rds": "^3.1134.0",
+    "@aws-sdk/client-s3": "^3.1134.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
