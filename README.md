@@ -4,13 +4,13 @@
 
 BlastGuard is an infrastructure safety system for AWS. An engineer proposes an infrastructure modification such as `DELETE subnet-07`. BlastGuard analyzes what depends on the resource, what downstream workloads could be affected, security implications, policy violations, blast radius, deterministic risk scores, and delivers an authoritative **SAFE / REVIEW / BLOCK** decision before changes hit production.
 
-This repository contains **STAGE 1 & STAGE 2: Core Infrastructure Intelligence & Deterministic Topology Engine**.
+This repository contains **STAGES 1, 2, 3 & 4: Core Infrastructure Intelligence, Topology Engine, Security & Policy Engine, Deterministic Risk & Decision Engine, and Multi-Agent Architecture**.
 
 ---
 
 ## Architecture Overview
 
-BlastGuard adheres strictly to the architectural rule: **`API → Service → ResourceProvider → Graph`**. Infrastructure and dependency intelligence are decoupled from presentation routes and handlers.
+BlastGuard adheres strictly to the architectural rule: **`API → Service → ResourceProvider → Graph`**. Infrastructure, dependency intelligence, risk scoring, and policy governance are decoupled from presentation routes and handlers.
 
 ```
 AWS_Blastguard/
@@ -39,7 +39,7 @@ AWS_Blastguard/
 │   │   ├── SecurityFinding.ts       # Security vulnerability finding schema
 │   │   ├── PolicyViolation.ts       # Governance rule violation schema
 │   │   ├── RiskResult.ts            # Deterministic risk scores & decisions
-│   │   ├── AnalysisResult.ts        # Comprehensive analysis container for Person 2
+│   │   ├── AnalysisResult.ts        # Finalized Stage 4 contract for Person 2
 │   │   └── index.ts
 │   │
 │   ├── providers/                   # Infrastructure abstraction layer
@@ -52,18 +52,26 @@ AWS_Blastguard/
 │   │   ├── DependencyAnalysisService.ts # Cycle-safe BFS dependency graph traversal
 │   │   ├── TopologyAnalysisService.ts   # Graph generator (affected, critical, external nodes)
 │   │   ├── ChangeRequestService.ts      # Change request CRUD & status management
-│   │   ├── ImpactService.ts             # Impact orchestrator delegating to Topology Engine
-│   │   ├── AnalysisService.ts           # Analysis orchestrator
+│   │   ├── ImpactAnalysisService.ts     # Impact categorization & metrics
+│   │   ├── SecurityAnalysisService.ts   # Deterministic security rules & findings
+│   │   ├── PolicyAnalysisService.ts     # Governance policy rules & violations
+│   │   ├── BlastRadiusService.ts        # Combined blast radius orchestration
+│   │   ├── AnalysisService.ts           # Analysis orchestrator (delegates to SupervisorAgent)
 │   │   └── index.ts
 │   │
-│   ├── engine/                      # Risk engine contracts (Stage 3 foundation)
-│   │   ├── AnalysisEngine.ts        # Analysis engine interface
+│   ├── engine/                      # Deterministic risk & decision engine
+│   │   ├── RiskEngine.ts            # 5-factor weighted risk calculator (0-100)
+│   │   ├── DecisionEngine.ts        # SAFE / REVIEW / BLOCK decision maker
+│   │   ├── AnalysisEngine.ts        # Unified pipeline coordinator
 │   │   └── index.ts
 │   │
-│   ├── agents/                      # Multi-agent architecture interfaces
-│   │   ├── BlastRadiusAgent.ts      # Blast radius agent contract
-│   │   ├── SecurityAgent.ts         # Security agent contract
-│   │   ├── PolicyAgent.ts           # Policy agent contract
+│   ├── agents/                      # Modular deterministic agent architecture
+│   │   ├── SupervisorAgent.ts       # End-to-end pipeline orchestrator
+│   │   ├── DependencyAgent.ts       # Discovers dependencies & graph connections
+│   │   ├── TopologyAgent.ts         # Computes topology nodes & edges
+│   │   ├── SecurityAgent.ts         # Audits security risks & findings
+│   │   ├── ImpactAgent.ts           # Evaluates impact scope & critical/external services
+│   │   ├── PolicyAgent.ts           # Evaluates governance policies & guardrails
 │   │   └── index.ts
 │   │
 │   ├── routes/                      # Express API route definitions
@@ -86,13 +94,15 @@ AWS_Blastguard/
 │       ├── logger.ts                # Structured logger
 │       └── index.ts
 │
-└── tests/                           # Vitest automated test suite
+└── tests/                           # Vitest automated test suite (51 tests)
     ├── health.test.ts               # Health & discovery endpoint tests
     ├── validation.test.ts           # Input validation & error format tests
     ├── requests.test.ts             # ChangeRequest, Impact, & Analyze tests
     ├── mockProvider.test.ts         # MockResourceProvider topology tests
     ├── stage2.dependencyEngine.test.ts # Cycle prevention & 11/3/2 derivation tests
-    └── stage2.api.test.ts           # Resource API & Impact API endpoint tests
+    ├── stage2.api.test.ts           # Resource API & Impact API endpoint tests
+    ├── stage3.securityPolicyBlastRadius.test.ts # Security findings & policy tests
+    └── stage4.riskDecisionAgents.test.ts # Risk engine, decision engine, & agent pipeline tests
 ```
 
 ---
@@ -163,7 +173,7 @@ For `DELETE subnet-07`, the graph traversal naturally derives:
 # Install dependencies
 npm install
 
-# Run test suite (40 tests passing)
+# Run test suite (51 tests passing)
 npm test
 
 # Run build
@@ -195,11 +205,60 @@ Stage 3 implements complete deterministic infrastructure intelligence without AI
 
 ---
 
-## What Stage 4 Should Build On
+## Stage 4 Risk Engine, Decision Engine & Agent Architecture
 
-Stage 3 supplies all deterministic facts, security findings, and policy violations. Stage 4 will build:
-1. **Risk Engine (`RiskEngine` / `AnalysisEngine`)**:
-   - Synthesize composite deterministic risk scores (0–100) weighting blast radius (`11`), critical compute services (`3`), external attack surfaces (`2`), security risk level (`CRITICAL`), and policy violations (`4`).
-   - Deliver definitive `SAFE` / `REVIEW` / `BLOCK` decision enforcement.
-2. **AI / Bedrock Remediation Layer (Optional / Final Stage)**:
-   - Provide executive summaries and remediation scripts grounded in the deterministic findings.
+Stage 4 introduces the deterministic decision-making layer of BlastGuard, converting infrastructure facts into authoritative **SAFE / REVIEW / BLOCK** decisions.
+
+### 1. Risk Engine (`RiskEngine`)
+Calculates a normalized 0–100 composite risk score from 5 distinct dimensions:
+- **Dependency Risk (0–25 pts)**: Scales with total affected resources and external dependencies (`15 pts` for >= 10 affected + `10 pts` for 2 external dependencies).
+- **Criticality Risk (0–25 pts)**: Accounts for target resource criticality and downstream critical compute services (`10 pts` for CRITICAL target + `15 pts` for 3 critical compute services).
+- **Security Risk (0–20 pts)**: Evaluates security findings (`CRITICAL` = 15 pts, `HIGH` = 10 pts, `MEDIUM` = 5 pts).
+- **Policy Risk (0–20 pts)**: Weighted policy violations (`5 pts` per CRITICAL violation, `2.5 pts` per HIGH violation).
+- **Environment Risk (0–10 pts)**: `PRODUCTION` = 7 pts, `STAGING` = 4 pts, `DEV` = 2 pts.
+
+#### The `DELETE subnet-07` Derivation:
+$$\text{Risk Score} = 25 (\text{Dependency}) + 25 (\text{Criticality}) + 15 (\text{Security}) + 15 (\text{Policy}) + 7 (\text{Environment}) = \mathbf{87}$$
+- **Score**: `87`
+- **Severity**: `CRITICAL`
+- **Decision**: `BLOCK`
+- **Affected Resources**: `11`
+- **Critical Services**: `3`
+- **External Dependencies**: `2`
+- **Risk Breakdown**: `{ dependencyRisk: 25, criticalityRisk: 25, securityRisk: 15, policyRisk: 15, environmentRisk: 7, total: 87 }`
+
+### 2. Decision Engine (`DecisionEngine`)
+Determines the operational verdict based on strict safety guardrails:
+- **`BLOCK`**:
+  - Any **CRITICAL policy violation** triggers an immediate hard `BLOCK`.
+  - Any risk score **$\ge 66$** results in a `BLOCK`.
+- **`REVIEW`**:
+  - Risk score **$31 - 65$** requires manual peer review and sign-off.
+- **`SAFE`**:
+  - Risk score **$0 - 30$** with zero critical policy violations is classified as safe to proceed.
+
+### 3. Modular Multi-Agent Pipeline
+The analysis is coordinated by deterministic, specialized agents:
+```
+SupervisorAgent
+  ├── 1. DependencyAgent  (Discovers full dependency graph via BFS)
+  ├── 2. TopologyAgent    (Builds nodes & edges topology)
+  ├── 3. SecurityAgent    (Audits infrastructure risks & database boundaries)
+  ├── 4. ImpactAgent      (Evaluates blast radius & critical services)
+  ├── 5. PolicyAgent      (Evaluates governance guardrails & policies)
+  ├── 6. RiskEngine       (Calculates normalized 0-100 risk score & breakdown)
+  └── 7. DecisionEngine   (Enforces SAFE / REVIEW / BLOCK decision)
+```
+*Zero LLM Principle*: No LLM or generative AI is permitted to hallucinate infrastructure state or compute risk scores. All decisions are reproducible, audited, and deterministic.
+
+### 4. Finalized Contract for Person 2
+The `POST /api/requests/:requestId/analyze` endpoint outputs the complete `AnalysisResult` contract containing:
+- `requestId`, `resourceId`, `riskScore`, `severity`, `decision`
+- `affectedResources`, `criticalServices`, `externalDependencies`
+- `riskBreakdown`: detailed point attribution
+- `reasons`: detailed diagnostic statements explaining the score and decision
+- `securityFindings`: structured security audit findings
+- `policyViolations`: structured governance policy violations
+- `dependencies`: raw dependency relationships
+- `topology`: `{ nodes, edges }` for diagram visualization
+

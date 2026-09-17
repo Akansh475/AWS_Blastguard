@@ -2,7 +2,7 @@
 
 > **Core statement**: *"Before you change production, know what will break."*
 
-This document defines the strict HTTP API interface, payload schemas, and data models for BlastGuard Core Infrastructure Intelligence (Stage 2). All endpoints follow REST conventions and return JSON responses.
+This document defines the strict HTTP API interface, payload schemas, and data models for BlastGuard Core Infrastructure Intelligence (Stage 4: Risk Engine, Decision Engine, and Agent Architecture). All endpoints follow REST conventions and return JSON responses.
 
 ---
 
@@ -395,36 +395,45 @@ For `DELETE subnet-07`:
 ---
 
 ### 2.6 Trigger Analysis for Change Request
-Initiate comprehensive infrastructure safety analysis. In Stage 3, executes the pipeline:
-`ChangeRequest → ResourceProvider → Dependency analysis → Topology → Security → Impact → Policy → BlastRadius`.
-Populates real `securityFindings` and `policyViolations` completely deterministically without AI.
+Initiate comprehensive infrastructure safety analysis. In Stage 4, executes the multi-agent pipeline:
+`SupervisorAgent → DependencyAgent → TopologyAgent → SecurityAgent → ImpactAgent → PolicyAgent → RiskEngine → DecisionEngine`.
+All analysis and risk scoring are 100% deterministic (zero LLM / AI hallucination).
 
 - **Method**: `POST`
 - **Route**: `/api/requests/:requestId/analyze`
 
 #### Success Response (200 OK)
-For `DELETE subnet-07`:
+For `DELETE subnet-07` (Critical Demo Target):
 ```json
 {
   "data": {
-    "id": "an-cr-a1b2c3d4",
     "requestId": "cr-a1b2c3d4",
-    "status": "BLOCKED",
+    "resourceId": "subnet-07",
+    "riskScore": 87,
+    "severity": "CRITICAL",
     "decision": "BLOCK",
-    "riskScore": 95,
-    "riskLevel": "CRITICAL",
-    "blastRadius": 11,
-    "impactGraph": {
-      "rootResourceId": "subnet-07",
-      "blastRadiusCount": 11,
-      "directImpactCount": 2,
-      "indirectImpactCount": 8,
-      "criticalServicesCount": 3,
-      "externalDependenciesCount": 2,
-      "affectedNodes": [...],
-      "criticalNodes": [...],
-      "externalNodes": [...]
+    "affectedResources": 11,
+    "criticalServices": 3,
+    "externalDependencies": 2,
+    "riskBreakdown": {
+      "dependencyRisk": 25,
+      "criticalityRisk": 25,
+      "securityRisk": 15,
+      "policyRisk": 15,
+      "environmentRisk": 7,
+      "total": 87
     },
+    "reasons": [
+      "CRITICAL POLICY VIOLATION: Critical resource subnet-07 (Subnet) cannot be deleted automatically. Manual change approval required.",
+      "CRITICAL POLICY VIOLATION: Changes to subnet-07 affect 3 critical downstream service(s) (payment-api, payment-worker, payment-notifier) and require mandatory architectural review.",
+      "HIGH POLICY VIOLATION: Production infrastructure changes require formal approval before application. Target subnet-07 is in PRODUCTION.",
+      "HIGH POLICY VIOLATION: Changes to subnet-07 affect 2 external-facing dependency(ies) (production-load-balancer, external-payment-gateway) and require external gateway approval.",
+      "Comprehensive risk score 87 meets or exceeds BLOCK threshold (66).",
+      "Affects 11 dependent AWS resources in the blast radius.",
+      "Directly disrupts 3 mission-critical compute service(s): payment-api, payment-worker, payment-notifier.",
+      "Severed connections to 2 external/public dependency(ies): production-load-balancer, external-payment-gateway.",
+      "Critical security disruption: database disruption or hosted compute isolation in PRODUCTION."
+    ],
     "securityFindings": [
       {
         "id": "sec-prod-boundary-subnet-07",
@@ -513,7 +522,53 @@ For `DELETE subnet-07`:
         "resourceId": "subnet-07"
       }
     ],
-    "summary": "Deterministic analysis for DELETE on Subnet (subnet-07) in PRODUCTION. Total affected: 11, critical services: 3, external dependencies: 2, security risk: CRITICAL. Policy violations: 4.",
+    "dependencies": [
+      {
+        "sourceId": "subnet-07",
+        "targetId": "payment-api",
+        "type": "HOSTS"
+      },
+      {
+        "sourceId": "subnet-07",
+        "targetId": "payment-worker",
+        "type": "HOSTS"
+      }
+    ],
+    "topology": {
+      "nodes": [
+        {
+          "id": "subnet-07",
+          "name": "subnet-07",
+          "type": "Subnet",
+          "criticality": "CRITICAL",
+          "environment": "PRODUCTION"
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge-subnet-07-payment-api",
+          "source": "subnet-07",
+          "target": "payment-api",
+          "relationship": "HOSTS"
+        }
+      ]
+    },
+    "id": "an-cr-a1b2c3d4",
+    "status": "BLOCKED",
+    "riskLevel": "CRITICAL",
+    "blastRadius": 11,
+    "impactGraph": {
+      "rootResourceId": "subnet-07",
+      "blastRadiusCount": 11,
+      "directImpactCount": 2,
+      "indirectImpactCount": 8,
+      "criticalServicesCount": 3,
+      "externalDependenciesCount": 2,
+      "affectedNodes": [],
+      "criticalNodes": [],
+      "externalNodes": []
+    },
+    "summary": "Deterministic analysis for DELETE on Subnet (subnet-07) in PRODUCTION: Decision BLOCK (Score 87/100, CRITICAL). Total affected: 11, critical services: 3, external dependencies: 2. Violations: 4.",
     "recommendations": [
       "[POLICY-001] Resolve: Production infrastructure changes require formal approval before application. Target subnet-07 is in PRODUCTION.",
       "[POLICY-002] Resolve: Critical resource subnet-07 (Subnet) cannot be deleted automatically. Manual change approval required.",
@@ -524,7 +579,8 @@ For `DELETE subnet-07`:
     ],
     "analyzedAt": "2026-09-17T08:00:05.123Z",
     "metadata": {
-      "stage": 3,
+      "stage": 4,
+      "pipeline": "Supervisor → Dependency Agent → Topology Agent → Security Agent → Impact Agent → Policy Agent → Risk Engine → Decision Engine",
       "productionImpact": true,
       "securityRisk": "CRITICAL",
       "policiesPassed": false
@@ -645,3 +701,55 @@ interface TopologyEdge {
   label?: string;
 }
 ```
+
+### 3.3 AnalysisResult (Stage 4 Contract)
+The finalized data contract returned by `/api/requests/:requestId/analyze` consumed by Person 2 (Frontend / Visualization):
+
+```typescript
+export type RiskDecision = 'SAFE' | 'REVIEW' | 'BLOCK';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface RiskBreakdown {
+  dependencyRisk: number;    // 0-25 points
+  criticalityRisk: number;   // 0-25 points
+  securityRisk: number;      // 0-20 points
+  policyRisk: number;        // 0-20 points
+  environmentRisk: number;   // 0-10 points
+  total: number;             // Sum, clamped to 0-100
+}
+
+export interface AnalysisTopology {
+  nodes: TopologyNode[];
+  edges: TopologyEdge[];
+}
+
+export interface AnalysisResult {
+  // Required Stage 4 finalized contract fields for Person 2
+  requestId: string;
+  resourceId: string;
+  riskScore: number;
+  severity: RiskLevel;
+  decision: RiskDecision;
+  affectedResources: number;
+  criticalServices: number;
+  externalDependencies: number;
+  riskBreakdown: RiskBreakdown;
+  reasons: string[];
+  securityFindings: SecurityFinding[];
+  policyViolations: PolicyViolation[];
+  dependencies: Dependency[];
+  topology: AnalysisTopology;
+
+  // Backwards compatibility fields preserved for earlier stages & integrations
+  id?: string;
+  status?: ChangeStatus;
+  riskLevel?: RiskLevel;
+  blastRadius?: number;
+  impactGraph?: ImpactGraph;
+  summary?: string;
+  recommendations?: string[];
+  analyzedAt?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
