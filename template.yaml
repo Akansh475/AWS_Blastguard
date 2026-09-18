@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  BlastGuard Core Infrastructure Intelligence API
+  "Before you change production, know what will break."
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        AWS_REGION: ap-south-1
+        BLASTGUARD_MODE: mock
+        FRONTEND_URL: http://localhost:5173
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment target environment
+
+Resources:
+  BlastGuardHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Amz-Date
+          - X-Api-Key
+        AllowOrigins:
+          - http://localhost:5173
+          - http://localhost:3000
+
+  BlastGuardApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/lambda.handler
+      Description: Core Lambda handler for BlastGuard API Gateway requests
+      Events:
+        ProxyRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BlastGuardHttpApi
+            Path: /{proxy+}
+            Method: ANY
+        RootRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref BlastGuardHttpApi
+            Path: /
+            Method: ANY
+
+Outputs:
+  BlastGuardApiEndpoint:
+    Description: Base URL for BlastGuard HTTP API
+    Value: !Sub "https://${BlastGuardHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  BlastGuardFunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt BlastGuardApiFunction.Arn
