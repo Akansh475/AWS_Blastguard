@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="100%" height="100%">
+  <defs>
+    <!-- Soft warm shadow for underneath the mascot -->
+    <radialGradient id="mascotShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E88214" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#E88214" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Top loop handle -->
+  <path
+    d="M 174 75 C 174 42, 226 42, 226 75"
+    fill="none"
+    stroke="#111111"
+    stroke-width="15"
+    stroke-linecap="round"
+  />
+
+  <!-- Main Body Silhouette with Stubby Arms and Legs -->
+  <path
+    d="
+      M 115 100
+      C 115 48, 285 48, 285 100
+      L 285 240
+      C 285 240, 345 242, 345 272
+      C 345 302, 285 304, 285 304
+      L 285 425
+      C 285 448, 245 448, 245 425
+      L 245 400
+      C 245 372, 155 372, 155 400
+      L 155 425
+      C 155 448, 115 448, 115 425
+      L 115 304
+      C 115 304, 55 302, 55 272
+      C 55 242, 115 240, 115 240
+      Z
+    "
+    fill="#F99E1C"
+    stroke="#111111"
+    stroke-width="15"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+
+  <!-- Left Eye -->
+  <ellipse cx="152" cy="155" rx="34" ry="42" fill="#FFFFFF" stroke="#111111" stroke-width="13" />
+  <!-- Left Pupil looking up -->
+  <ellipse cx="157" cy="138" rx="21" ry="26" fill="#111111" />
+  <!-- Left Eye Highlight -->
+  <circle cx="163" cy="130" r="6.5" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <ellipse cx="248" cy="155" rx="34" ry="42" fill="#FFFFFF" stroke="#111111" stroke-width="13" />
+  <!-- Right Pupil looking up -->
+  <ellipse cx="253" cy="138" rx="21" ry="26" fill="#111111" />
+  <!-- Right Eye Highlight -->
+  <circle cx="259" cy="130" r="6.5" fill="#FFFFFF" />
+
+  <!-- Amazon-style Smile with Cheek Arrow -->
+  <!-- Smile Arc -->
+  <path
+    d="M 132 238 C 172 278, 235 275, 272 236"
+    fill="none"
+    stroke="#111111"
+    stroke-width="14"
+    stroke-linecap="round"
+  />
+  <!-- Arrow Head on Right Smile Edge -->
+  <path
+    d="M 276 226 L 273 246 L 256 240"
+    fill="none"
+    stroke="#111111"
+    stroke-width="12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
