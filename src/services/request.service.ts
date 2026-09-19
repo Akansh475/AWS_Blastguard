@@ -1,18 +1,26 @@
 import { IRequestRepository } from '../repositories/request.repository';
 import { IAnalysisOrchestrator } from '../orchestration/analysis.orchestrator';
+import { ExplanationService } from '../ai/explanation.service';
+import { createBedrockClient } from '../ai/bedrock.client';
 import { ValidationService } from './validation.service';
 import { ResponseMapper, RequestDetailResponse, RequestSummaryResponse } from './response.mapper';
 import { ChangeRequest, RequestFilterOptions, RequestStatus } from '../models/changeRequest.model';
-import { AnalysisResult } from '../models/analysisResult.model';
-import { NotFoundError, AnalysisError } from '../models/errors.model';
+import { AnalysisResult, ImpactGraph } from '../models/analysisResult.model';
+import { ExplanationRecord } from '../ai/types/explanation.model';
+import { NotFoundError, AnalysisError, AnalysisRequiredError, ExplanationNotFoundError } from '../models/errors.model';
 import { generateRequestId } from '../utils/idGenerator';
 import { logger } from '../utils/logger';
 
 export class RequestService {
+  private readonly explanationService: ExplanationService;
+
   constructor(
     private readonly repository: IRequestRepository,
-    private readonly orchestrator: IAnalysisOrchestrator
-  ) {}
+    private readonly orchestrator: IAnalysisOrchestrator,
+    explanationService?: ExplanationService
+  ) {
+    this.explanationService = explanationService || new ExplanationService(createBedrockClient(), repository);
+  }
 
   /**
    * Create a new Change Request in PENDING status.
@@ -122,4 +130,75 @@ export class RequestService {
       );
     }
   }
+
+  /**
+   * Get Person 1's ImpactGraph for a specific Change Request.
+   */
+  async getImpactGraph(requestId: string): Promise<ImpactGraph> {
+    if (!requestId || typeof requestId !== 'string') {
+      throw new NotFoundError(`Invalid request ID`);
+    }
+
+    const request = await this.repository.getRequest(requestId);
+    if (!request) {
+      throw new NotFoundError(`Change request '${requestId}' was not found`);
+    }
+
+    const analysis = await this.repository.getAnalysisResult(requestId);
+    if (analysis && analysis.impactGraph) {
+      return analysis.impactGraph;
+    }
+
+    throw new NotFoundError(`Impact graph not found for request '${requestId}'. Analysis has not been completed.`);
+  }
+
+  /**
+   * Generate or retrieve a human-readable explanation using Amazon Bedrock AI.
+   * Requires that the request has already completed Person 1 analysis.
+   */
+  async generateExplanation(requestId: string, forceRegenerate = false): Promise<ExplanationRecord> {
+    if (!requestId || typeof requestId !== 'string') {
+      throw new NotFoundError(`Invalid request ID`);
+    }
+
+    const request = await this.repository.getRequest(requestId);
+    if (!request) {
+      throw new NotFoundError(`Change request '${requestId}' was not found`);
+    }
+
+    const analysis = await this.repository.getAnalysisResult(requestId);
+    if (!analysis) {
+      throw new AnalysisRequiredError(
+        `Change request '${requestId}' must be analyzed before generating an AI explanation.`
+      );
+    }
+
+    return this.explanationService.generateOrGetExplanation(request, analysis, forceRegenerate);
+  }
+
+  /**
+   * Retrieve a previously generated AI explanation for a Change Request.
+   */
+  async getExplanation(requestId: string): Promise<ExplanationRecord> {
+    if (!requestId || typeof requestId !== 'string') {
+      throw new NotFoundError(`Invalid request ID`);
+    }
+
+    const request = await this.repository.getRequest(requestId);
+    if (!request) {
+      throw new NotFoundError(`Change request '${requestId}' was not found`);
+    }
+
+    const explanation = await this.repository.getExplanation(requestId);
+    if (!explanation) {
+      throw new ExplanationNotFoundError(
+        `No AI explanation found for change request '${requestId}'. Run POST /api/requests/${requestId}/explain first.`
+      );
+    }
+
+    return explanation;
+  }
 }
+
+
+

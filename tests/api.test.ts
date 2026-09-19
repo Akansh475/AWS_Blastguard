@@ -142,6 +142,74 @@ describe('BlastGuard REST API Endpoints', () => {
     });
   });
 
+  describe('GET /api/requests/:requestId/impact', () => {
+    it('should return Person 1 ImpactGraph for an analyzed request', async () => {
+      const res = await request(app).get('/api/requests/req_01/impact');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('nodes');
+      expect(res.body).toHaveProperty('links');
+      expect(Array.isArray(res.body.nodes)).toBe(true);
+      expect(Array.isArray(res.body.links)).toBe(true);
+      expect(res.body.nodes.length).toBeGreaterThan(0);
+      expect(res.body.nodes[0]).toHaveProperty('id');
+    });
+
+    it('should return 404 if request is not yet analyzed or does not exist', async () => {
+      // req_05 is PENDING (not analyzed)
+      const res = await request(app).get('/api/requests/req_05/impact');
+      expect(res.status).toBe(404);
+      expect(res.body.error.code).toBe('REQUEST_NOT_FOUND');
+    });
+  });
+
+  describe('Critical Demo Test: DELETE subnet-07 Lifecycle', () => {
+    it('should create and analyze DELETE subnet-07 and return exact Person 1 risk attributes', async () => {
+      // 1. Submit DELETE subnet-07
+      const createRes = await request(app).post('/api/requests').send({
+        action: 'DELETE',
+        resourceId: 'subnet-07',
+        resourceType: 'Subnet',
+        region: 'ap-south-1',
+        environment: 'PRODUCTION',
+      });
+
+      expect(createRes.status).toBe(201);
+      const { requestId } = createRes.body;
+
+      // 2. Trigger analysis
+      const analyzeRes = await request(app).post(`/api/requests/${requestId}/analyze`);
+      expect(analyzeRes.status).toBe(200);
+
+      // 3. Verify exact Person 1 metrics
+      expect(analyzeRes.body.riskScore).toBe(87);
+      expect(analyzeRes.body.severity).toBe('CRITICAL');
+      expect(analyzeRes.body.decision).toBe('BLOCK');
+      expect(analyzeRes.body.affectedResources).toBe(11);
+      expect(analyzeRes.body.criticalServices).toBe(3);
+      expect(analyzeRes.body.externalDependencies).toBe(2);
+
+      // 4. Verify request details GET endpoint
+      const detailRes = await request(app).get(`/api/requests/${requestId}`);
+      expect(detailRes.status).toBe(200);
+      expect(detailRes.body.status).toBe('BLOCKED');
+      expect(detailRes.body.riskScore).toBe(87);
+      expect(detailRes.body.severity).toBe('CRITICAL');
+      expect(detailRes.body.decision).toBe('BLOCK');
+      expect(detailRes.body.affectedResources).toBe(11);
+      expect(detailRes.body.criticalServices).toBe(3);
+      expect(detailRes.body.externalDependencies).toBe(2);
+    });
+  });
+
+  describe('API Route Aliasing (/api/v1/requests)', () => {
+    it('should support /api/v1/requests route transparently', async () => {
+      const res = await request(app).get('/api/v1/requests');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+  });
+
   describe('404 Route Handler', () => {
     it('should return 404 standard error for undefined routes', async () => {
       const res = await request(app).get('/api/unknown-endpoint');
@@ -150,3 +218,4 @@ describe('BlastGuard REST API Endpoints', () => {
     });
   });
 });
+

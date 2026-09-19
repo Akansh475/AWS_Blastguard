@@ -10,6 +10,11 @@ export interface RequestSummaryResponse {
   environment: string;
   status: string;
   riskScore?: number;
+  severity?: string;
+  decision?: string;
+  affectedResources?: number;
+  criticalServices?: number;
+  externalDependencies?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,6 +84,11 @@ export class ResponseMapper {
       environment: request.environment,
       status: request.status,
       riskScore: request.riskScore,
+      severity: request.severity,
+      decision: request.decision,
+      affectedResources: request.affectedResources,
+      criticalServices: request.criticalServices,
+      externalDependencies: request.externalDependencies,
       createdAt: request.createdAt,
       updatedAt: request.updatedAt,
     };
@@ -96,6 +106,12 @@ export class ResponseMapper {
 
     return {
       ...summary,
+      riskScore: analysis.riskScore ?? summary.riskScore,
+      severity: analysis.severity ?? summary.severity,
+      decision: analysis.decision ?? summary.decision,
+      affectedResources: analysis.affectedResources ?? summary.affectedResources,
+      criticalServices: analysis.criticalServices ?? summary.criticalServices,
+      externalDependencies: analysis.externalDependencies ?? summary.externalDependencies,
       analysis: {
         riskScore: analysis.riskScore,
         severity: analysis.severity,
@@ -143,6 +159,7 @@ export class ResponseMapper {
     };
   }
 
+
   public static toAnalysisResponse(analysis: AnalysisResult): Record<string, unknown> {
     return {
       requestId: analysis.requestId,
@@ -163,4 +180,16 @@ export class ResponseMapper {
       analyzedAt: analysis.analyzedAt,
     };
   }
+
+  public static toExplanationResponse(record: import('../ai/types/explanation.model').ExplanationRecord): Record<string, unknown> {
+    return {
+      requestId: record.requestId,
+      explanation: record.explanation,
+      generatedAt: record.generatedAt,
+      model: record.model,
+      version: record.version,
+      ...(record.isFallback !== undefined ? { isFallback: record.isFallback } : {}),
+    };
+  }
 }
+

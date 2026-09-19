@@ -59,4 +59,49 @@ export class RequestsHandler {
       next(error);
     }
   };
+
+  /**
+   * GET /api/requests/:requestId/impact
+   * Get Person 1's ImpactGraph for a specific Change Request.
+   */
+  getImpactGraph = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const requestId = Array.isArray(req.params.requestId) ? req.params.requestId[0] : req.params.requestId;
+      const impactGraph = await this.requestService.getImpactGraph(requestId);
+      res.status(200).json(impactGraph);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /api/requests/:requestId/explain
+   * Generate or retrieve a human-readable AI explanation using Amazon Bedrock.
+   */
+  generateExplanation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const requestId = Array.isArray(req.params.requestId) ? req.params.requestId[0] : req.params.requestId;
+      const force = req.query.force === 'true' || req.body?.force === true;
+      const explanationRecord = await this.requestService.generateExplanation(requestId, force);
+      res.status(200).json(ResponseMapper.toExplanationResponse(explanationRecord));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /api/requests/:requestId/explanation
+   * Retrieve a previously generated AI explanation for a Change Request.
+   */
+  getExplanation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const requestId = Array.isArray(req.params.requestId) ? req.params.requestId[0] : req.params.requestId;
+      const explanationRecord = await this.requestService.getExplanation(requestId);
+      res.status(200).json(ResponseMapper.toExplanationResponse(explanationRecord));
+    } catch (error) {
+      next(error);
+    }
+  };
 }
+
+

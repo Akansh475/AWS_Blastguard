@@ -1,6 +1,8 @@
 import { ChangeRequest, RequestFilterOptions, RequestStatus } from '../models/changeRequest.model';
 import { AnalysisResult } from '../models/analysisResult.model';
 
+import { ExplanationRecord } from '../ai/types/explanation.model';
+
 export interface IRequestRepository {
   createRequest(request: ChangeRequest): Promise<ChangeRequest>;
   getRequest(requestId: string): Promise<ChangeRequest | null>;
@@ -8,8 +10,11 @@ export interface IRequestRepository {
   updateRequestStatus(requestId: string, status: RequestStatus, riskScore?: number): Promise<ChangeRequest | null>;
   saveAnalysisResult(result: AnalysisResult): Promise<AnalysisResult>;
   getAnalysisResult(requestId: string): Promise<AnalysisResult | null>;
+  saveExplanation(requestId: string, record: ExplanationRecord): Promise<void>;
+  getExplanation(requestId: string): Promise<ExplanationRecord | null>;
   clearAll?(): Promise<void>; // Useful for automated testing
 }
+
 
 export class InMemoryRequestRepository implements IRequestRepository {
   private requests: Map<string, ChangeRequest> = new Map();
@@ -123,9 +128,12 @@ export class InMemoryRequestRepository implements IRequestRepository {
 
     for (const req of initialRequests) {
       this.requests.set(req.requestId, req);
+      // Also alias cr-XX format for seamless frontend integration
+      const crAlias = req.requestId.replace('req_', 'cr-');
+      this.requests.set(crAlias, { ...req, requestId: crAlias });
     }
 
-    // Seed analysis for req_01 (subnet-07)
+    // Seed analysis for req_01 and cr-01 (subnet-07)
     const subnetAnalysis: AnalysisResult = {
       requestId: 'req_01',
       resourceId: 'subnet-07',
@@ -178,6 +186,20 @@ export class InMemoryRequestRepository implements IRequestRepository {
     };
 
     this.analysisResults.set('req_01', subnetAnalysis);
+    this.analysisResults.set('cr-01', { ...subnetAnalysis, requestId: 'cr-01' });
+  }
+
+  private resolveId(id: string): string {
+    if (this.requests.has(id)) return id;
+    if (id.startsWith('cr-')) {
+      const mapped = `req_${id.slice(3)}`;
+      if (this.requests.has(mapped)) return mapped;
+    }
+    if (id.startsWith('req_')) {
+      const mapped = `cr-${id.slice(4)}`;
+      if (this.requests.has(mapped)) return mapped;
+    }
+    return id;
   }
 
   async createRequest(request: ChangeRequest): Promise<ChangeRequest> {
@@ -186,7 +208,8 @@ export class InMemoryRequestRepository implements IRequestRepository {
   }
 
   async getRequest(requestId: string): Promise<ChangeRequest | null> {
-    const found = this.requests.get(requestId);
+    const targetId = this.resolveId(requestId);
+    const found = this.requests.get(targetId);
     return found ? { ...found } : null;
   }
 
@@ -224,12 +247,62 @@ export class InMemoryRequestRepository implements IRequestRepository {
 
   async saveAnalysisResult(result: AnalysisResult): Promise<AnalysisResult> {
     this.analysisResults.set(result.requestId, { ...result });
+    const existing = this.requests.get(result.requestId);
+    if (existing) {
+      this.requests.set(result.requestId, {
+        ...existing,
+        riskScore: result.riskScore,
+        severity: result.severity,
+        decision: result.decision,
+        affectedResources: result.affectedResources,
+        criticalServices: result.criticalServices,
+        externalDependencies: result.externalDependencies,
+        analyzedAt: result.analyzedAt,
+        analysisResult: { ...result },
+        updatedAt: new Date().toISOString(),
+      });
+    }
     return { ...result };
   }
 
   async getAnalysisResult(requestId: string): Promise<AnalysisResult | null> {
-    const found = this.analysisResults.get(requestId);
-    return found ? { ...found } : null;
+    const targetId = this.resolveId(requestId);
+    const found = this.analysisResults.get(targetId);
+    if (found) return { ...found, requestId };
+    const request = this.requests.get(targetId);
+    return request?.analysisResult ? { ...request.analysisResult, requestId } : null;
+  }
+
+  async saveExplanation(requestId: string, record: ExplanationRecord): Promise<void> {
+    const targetId = this.resolveId(requestId);
+    const existing = this.requests.get(targetId);
+    if (existing) {
+      this.requests.set(targetId, {
+        ...existing,
+        aiExplanation: record.explanation,
+        aiExplanationGeneratedAt: record.generatedAt,
+        aiModel: record.model,
+        aiExplanationVersion: record.version,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  async getExplanation(requestId: string): Promise<ExplanationRecord | null> {
+    const targetId = this.resolveId(requestId);
+    const request = this.requests.get(targetId);
+    if (!request || !request.aiExplanation) {
+      return null;
+    }
+
+    return {
+      requestId,
+      explanation: request.aiExplanation,
+      generatedAt: request.aiExplanationGeneratedAt || new Date().toISOString(),
+      model: request.aiModel || 'mock-bedrock-v1',
+      version: request.aiExplanationVersion || '1.0.0',
+      isFallback: false,
+    };
   }
 
   async clearAll(): Promise<void> {

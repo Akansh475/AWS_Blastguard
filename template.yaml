@@ -1,74 +1,102 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  BlastGuard Core Infrastructure Intelligence API
-  "Before you change production, know what will break."
+Description: BlastGuard - AWS Infrastructure Safety System (Application & API Layer)
 
 Globals:
   Function:
     Timeout: 30
     MemorySize: 512
     Runtime: nodejs20.x
+    Architectures:
+      - x86_64
     Environment:
       Variables:
-        AWS_REGION: ap-south-1
-        BLASTGUARD_MODE: mock
-        FRONTEND_URL: http://localhost:5173
-
-Parameters:
-  EnvironmentName:
-    Type: String
-    Default: dev
-    AllowedValues:
-      - dev
-      - staging
-      - prod
-    Description: Deployment target environment
+        NODE_ENV: production
+        BLASTGUARD_MODE: aws
+        DYNAMODB_TABLE_NAME: !Ref BlastGuardRequestsTable
+        BEDROCK_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
 
 Resources:
-  BlastGuardHttpApi:
-    Type: AWS::Serverless::HttpApi
+  # =================================================================
+  # DynamoDB Table for Change Requests & Analysis Results
+  # =================================================================
+  BlastGuardRequestsTable:
+    Type: AWS::DynamoDB::Table
     Properties:
-      CorsConfiguration:
-        AllowMethods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
-        AllowHeaders:
-          - Content-Type
-          - Authorization
-          - X-Amz-Date
-          - X-Api-Key
-        AllowOrigins:
-          - http://localhost:5173
-          - http://localhost:3000
+      TableName: BlastGuardRequests
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: requestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: requestId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: BlastGuard
+        - Key: Environment
+          Value: Production
 
+  # =================================================================
+  # BlastGuard API Gateway and Lambda Function
+  # =================================================================
   BlastGuardApiFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: blastguard-api-service
       CodeUri: ./
-      Handler: dist/handlers/lambda.handler
-      Description: Core Lambda handler for BlastGuard API Gateway requests
+      Handler: dist/src/api/serverless.handler
+      Description: BlastGuard Express REST API Application & Orchestration Service
+      Policies:
+        # Minimal Least-Privilege IAM Policy for DynamoDB Access
+        - Statement:
+            - Sid: DynamoDBTableAccess
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:Scan
+                - dynamodb:Query
+              Resource:
+                - !GetAtt BlastGuardRequestsTable.Arn
+                - !Sub '${BlastGuardRequestsTable.Arn}/index/*'
+            # Minimal IAM Policy for Amazon Bedrock Foundation Model Invocations
+            - Sid: BedrockModelInvocationAccess
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - 'arn:aws:bedrock:*::foundation-model/*'
+                - 'arn:aws:bedrock:*:*:inference-profile/*'
+
       Events:
-        ProxyRoute:
+        ApiGatewayProxy:
           Type: HttpApi
           Properties:
-            ApiId: !Ref BlastGuardHttpApi
             Path: /{proxy+}
             Method: ANY
-        RootRoute:
+        ApiGatewayRoot:
           Type: HttpApi
           Properties:
-            ApiId: !Ref BlastGuardHttpApi
             Path: /
             Method: ANY
 
 Outputs:
   BlastGuardApiEndpoint:
-    Description: Base URL for BlastGuard HTTP API
-    Value: !Sub "https://${BlastGuardHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Description: HTTP API Gateway endpoint URL for BlastGuard
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  BlastGuardRequestsTableName:
+    Description: DynamoDB Table Name for BlastGuard Requests
+    Value: !Ref BlastGuardRequestsTable
+  BlastGuardRequestsTableArn:
+    Description: DynamoDB Table ARN
+    Value: !GetAtt BlastGuardRequestsTable.Arn
   BlastGuardFunctionArn:
     Description: Lambda Function ARN
     Value: !GetAtt BlastGuardApiFunction.Arn

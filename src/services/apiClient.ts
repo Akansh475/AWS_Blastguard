@@ -1,6 +1,7 @@
 import { CreateChangeRequestDTO, RequestStatus } from '../models/changeRequest.model';
 import { RequestDetailResponse, RequestSummaryResponse } from './response.mapper';
-import { AnalysisResult } from '../models/analysisResult.model';
+import { AnalysisResult, ImpactGraph } from '../models/analysisResult.model';
+import { ExplanationRecord } from '../ai/types/explanation.model';
 
 const API_BASE = 'http://localhost:4000/api';
 
@@ -68,4 +69,36 @@ export class BlastGuardApiClient {
       method: 'POST',
     });
   }
+
+  /**
+   * GET /api/requests/:requestId/impact
+   * Fetch Person 1 topological ImpactGraph.
+   */
+  public static async getImpactGraph(requestId: string): Promise<ImpactGraph> {
+    return this.request<ImpactGraph>(`/requests/${encodeURIComponent(requestId)}/impact`, {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * POST /api/requests/:requestId/explain
+   * Generate or retrieve Amazon Bedrock AI structured explanation for an analyzed request.
+   */
+  public static async explainRequest(requestId: string, force = false): Promise<ExplanationRecord> {
+    return this.request<ExplanationRecord>(`/requests/${encodeURIComponent(requestId)}/explain`, {
+      method: 'POST',
+      body: JSON.stringify({ force }),
+    });
+  }
+
+  /**
+   * GET /api/requests/:requestId/explanation
+   * Retrieve cached AI explanation for a change request.
+   */
+  public static async getExplanation(requestId: string): Promise<ExplanationRecord> {
+    return this.request<ExplanationRecord>(`/requests/${encodeURIComponent(requestId)}/explanation`, {
+      method: 'GET',
+    });
+  }
 }
+

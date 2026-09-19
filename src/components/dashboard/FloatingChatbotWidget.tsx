@@ -127,17 +127,17 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.94 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className={`glass-panel p-5 sm:p-6 flex flex-col gap-4 shadow-[0_25px_70px_rgba(210,180,110,0.28)] border border-white/90 mb-3 ${
+            className={`glass-panel p-5 sm:p-6 flex flex-col gap-4 shadow-[0_25px_70px_rgba(60,120,40,0.18)] border border-[#BCE99A] mb-3 ${
               isExpanded
                 ? 'w-[90vw] sm:w-[620px] lg:w-[680px] h-[75vh]'
                 : 'w-[92vw] sm:w-[480px] lg:w-[520px] h-[580px]'
             }`}
           >
             {/* 1. DRAGGABLE WINDOW HEADER (Drag Handle) */}
-            <div className="flex items-center justify-between border-b border-black/8 pb-3.5 cursor-grab active:cursor-grabbing">
+            <div className="flex items-center justify-between border-b border-[#BCE99A]/60 pb-3.5 cursor-grab active:cursor-grabbing">
               {/* Mascot + Title */}
               <div className="flex items-center gap-3">
-                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#F89C26]/30 to-[#F89C26]/10 border border-[#F89C26]/30 flex items-center justify-center shrink-0 shadow-xs">
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#BAF084] to-[#A4EB67] border border-[#8CD94B]/60 flex items-center justify-center shrink-0 shadow-xs">
                   <img
                     src="/mascot-icon.svg"
                     alt="BlastGuard Mascot"
@@ -151,14 +151,14 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-[#18181B] tracking-tight">
+                    <h3 className="text-base font-black text-[#1E4726] tracking-tight">
                       Ask BlastGuard
                     </h3>
-                    <span className="px-2 py-0.2 rounded-full bg-[#F89C26]/20 text-[#18181B] text-[10px] font-bold uppercase tracking-wider">
+                    <span className="px-2 py-0.2 rounded-full bg-[#BAF084] text-[#1E4726] text-[10px] font-bold uppercase tracking-wider border border-[#9FE65E]">
                       AI COPILOT
                     </span>
                   </div>
-                  <p className="text-xs text-[#71717A] mt-0.5">
+                  <p className="text-xs text-[#54825A] mt-0.5 font-medium">
                     Live Digital Twin • Drag window anywhere
                   </p>
                 </div>
@@ -168,7 +168,7 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
               <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {/* Drag Grip Handle */}
                 <div
-                  className="px-2 py-1 rounded-lg bg-white/50 text-[#8E8E93] hover:text-[#18181B] flex items-center justify-center cursor-grab active:cursor-grabbing mr-1"
+                  className="px-2 py-1 rounded-lg bg-[#DCF8C6] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center cursor-grab active:cursor-grabbing mr-1"
                   title="Drag window"
                 >
                   <GripHorizontal className="w-4 h-4" />
@@ -177,7 +177,7 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 {/* Reset Chat */}
                 <button
                   onClick={handleResetChat}
-                  className="w-8 h-8 rounded-full bg-white/60 hover:bg-white text-[#52525B] flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-[#DCF8C6] hover:bg-[#D4F7B2] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center transition-all shadow-2xs cursor-pointer border border-[#BCE99A]"
                   title="Reset conversation"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -186,7 +186,7 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 {/* Expand / Minimize Window */}
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-8 h-8 rounded-full bg-white/60 hover:bg-white text-[#52525B] flex items-center justify-center transition-all shadow-2xs cursor-pointer hidden sm:flex"
+                  className="w-8 h-8 rounded-full bg-[#DCF8C6] hover:bg-[#D4F7B2] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center transition-all shadow-2xs cursor-pointer hidden sm:flex border border-[#BCE99A]"
                   title={isExpanded ? 'Restore size' : 'Expand window'}
                 >
                   {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -195,7 +195,7 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 {/* Close Button */}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-8 h-8 rounded-full bg-white/70 hover:bg-white text-[#52525B] hover:text-[#18181B] flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-[#DCF8C6] hover:bg-[#D4F7B2] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center transition-all shadow-2xs cursor-pointer border border-[#BCE99A]"
                   title="Close Assistant"
                 >
                   <X className="w-4 h-4" />
@@ -214,9 +214,9 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 <button
                   key={chip.label}
                   onClick={() => handleSendMessage(chip.text)}
-                  className="px-3.5 py-1.5 rounded-full bg-white/65 hover:bg-white border border-white/90 text-xs font-bold text-[#18181B] transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-full bg-[#F4FDEE] hover:bg-[#DCF8C6] border border-[#BCE99A] text-xs font-bold text-[#1E4726] transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
-                  <Sparkles className="w-3 h-3 text-[#F89C26]" />
+                  <Sparkles className="w-3 h-3 text-[#15803D]" />
                   <span>{chip.label}</span>
                 </button>
               ))}
@@ -234,21 +234,21 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                     <div
                       className={`p-4 rounded-3xl max-w-[92%] leading-relaxed ${
                         isUser
-                          ? 'bg-[#18181B] text-white font-medium rounded-br-xs shadow-sm'
-                          : 'glass-card border border-white/90 text-[#18181B] rounded-bl-xs shadow-xs whitespace-pre-line'
+                          ? 'bg-[#1E4726] text-white font-medium rounded-br-xs shadow-sm'
+                          : 'bg-[#FFFFFF] border border-[#BCE99A] text-[#1E4726] rounded-bl-xs shadow-xs whitespace-pre-line'
                       }`}
                     >
                       {m.text}
 
                       {/* Interactive View Impact Button inside Bot Reply */}
                       {!isUser && m.hasAction && onOpenImpactStudio && (
-                        <div className="mt-3 pt-2.5 border-t border-black/8 flex items-center justify-between">
-                          <span className="text-[11px] font-semibold text-[#71717A]">
+                        <div className="mt-3 pt-2.5 border-t border-[#BCE99A]/60 flex items-center justify-between">
+                          <span className="text-[11px] font-semibold text-[#54825A]">
                             Want to inspect the graph?
                           </span>
                           <button
                             onClick={onOpenImpactStudio}
-                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F89C26] hover:bg-[#E88B0E] text-[#18181B] text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BAF084] hover:bg-[#A8EB6C] text-[#1E4726] text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 border border-[#8CD94B]"
                           >
                             <Network className="w-3.5 h-3.5" />
                             <span>Open Topology Studio →</span>
@@ -268,19 +268,19 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="flex items-center gap-2.5 pt-2 border-t border-black/8"
+              className="flex items-center gap-2.5 pt-2 border-t border-[#BCE99A]/60"
             >
               <input
                 type="text"
                 placeholder="Ask about this change, Cedar policy, or AWS dependencies..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-2xl bg-white/70 focus:bg-white border border-white/85 text-xs sm:text-sm font-medium text-[#18181B] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#F89C26]/40 transition-all shadow-inner"
+                className="flex-1 px-4 py-3 rounded-2xl bg-[#F4FDEE] focus:bg-[#FFFFFF] border border-[#BCE99A] text-xs sm:text-sm font-medium text-[#1E4726] placeholder:text-[#54825A] focus:outline-none focus:ring-2 focus:ring-[#15803D]/40 transition-all shadow-inner"
               />
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="p-3 rounded-2xl bg-[#F89C26] hover:bg-[#E88B0E] text-[#18181B] font-bold transition-all shadow-sm disabled:opacity-40 cursor-pointer active:scale-95 flex items-center justify-center shrink-0"
+                className="p-3 rounded-2xl bg-[#BAF084] hover:bg-[#A8EB6C] text-[#1E4726] font-black transition-all shadow-sm disabled:opacity-40 cursor-pointer active:scale-95 flex items-center justify-center shrink-0 border border-[#8CD94B]"
                 title="Send message"
               >
                 <Send className="w-4 h-4" />
@@ -297,10 +297,10 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.96 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-panel px-5 py-3 flex items-center gap-3.5 shadow-[0_12px_40px_rgba(210,180,110,0.25)] border border-white/90 hover:border-white transition-all cursor-pointer"
+        className="glass-panel px-5 py-3 flex items-center gap-3.5 shadow-[0_12px_40px_rgba(60,120,40,0.18)] border border-[#BCE99A] hover:border-[#8CD94B] transition-all cursor-pointer bg-[#DCF8C6]/90"
       >
-        {/* Orange Mascot Head with glowing aura */}
-        <div className="relative w-10 h-10 rounded-2xl bg-[#F89C26]/20 border border-[#F89C26]/30 flex items-center justify-center shrink-0 shadow-2xs">
+        {/* Light Green Mascot Head with glowing aura */}
+        <div className="relative w-10 h-10 rounded-2xl bg-[#BAF084] border border-[#8CD94B] flex items-center justify-center shrink-0 shadow-2xs">
           <img
             src="/mascot-icon.svg"
             alt="Ask BlastGuard Mascot"
@@ -313,16 +313,16 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
 
         {/* Text */}
         <div className="text-left">
-          <div className="text-xs sm:text-sm font-black text-[#18181B] leading-tight">
+          <div className="text-xs sm:text-sm font-black text-[#1E4726] leading-tight">
             Ask BlastGuard
           </div>
-          <div className="text-[11px] font-medium text-[#71717A] leading-tight mt-0.5">
+          <div className="text-[11px] font-bold text-[#54825A] leading-tight mt-0.5">
             Need help?
           </div>
         </div>
 
         {/* Up / Down Chevron */}
-        <div className="w-7 h-7 rounded-full bg-white/70 border border-white/80 flex items-center justify-center text-[#52525B] ml-1 shadow-2xs">
+        <div className="w-7 h-7 rounded-full bg-[#C4EFA0] border border-[#AEDF86] flex items-center justify-center text-[#1E4726] ml-1 shadow-2xs">
           {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
         </div>
       </motion.button>

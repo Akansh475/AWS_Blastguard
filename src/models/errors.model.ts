@@ -28,3 +28,16 @@ export class AnalysisError extends AppError {
     super(message, 500, 'ANALYSIS_FAILED');
   }
 }
+
+export class AnalysisRequiredError extends AppError {
+  constructor(message = 'Change request must be analyzed before generating an explanation') {
+    super(message, 409, 'ANALYSIS_REQUIRED');
+  }
+}
+
+export class ExplanationNotFoundError extends AppError {
+  constructor(message = 'AI explanation not found for this change request') {
+    super(message, 404, 'EXPLANATION_NOT_FOUND');
+  }
+}
+

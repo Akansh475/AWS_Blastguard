@@ -5,7 +5,8 @@ import { errorHandler } from '../middleware/error.middleware';
 import { createRequestsRouter } from '../routes/requests.routes';
 import { RequestsHandler } from '../handlers/requests.handler';
 import { RequestService } from '../services/request.service';
-import { InMemoryRequestRepository, IRequestRepository } from '../repositories/request.repository';
+import { IRequestRepository } from '../repositories/request.repository';
+import { createRequestRepository } from '../repositories/repository.factory';
 import { AnalysisOrchestrator, IAnalysisOrchestrator } from '../orchestration/analysis.orchestrator';
 import { InfrastructureIntelligenceProvider, IInfrastructureIntelligenceProvider } from '../orchestration/infrastructure.provider';
 
@@ -25,7 +26,7 @@ export function createApp(deps?: AppDependencies): Express {
   app.use(requestLogger);
 
   // 2. Dependency Injection
-  const repository = deps?.repository || new InMemoryRequestRepository(true);
+  const repository = deps?.repository || createRequestRepository();
   const intelligenceProvider = deps?.intelligenceProvider || new InfrastructureIntelligenceProvider();
   const orchestrator = deps?.orchestrator || new AnalysisOrchestrator(intelligenceProvider);
   const requestService = deps?.requestService || new RequestService(repository, orchestrator);
@@ -42,8 +43,11 @@ export function createApp(deps?: AppDependencies): Express {
     });
   });
 
-  // 4. API Routes
-  app.use('/api/requests', createRequestsRouter(requestsHandler));
+  // 4. API Routes (Primary and v1 alias)
+  const requestsRouter = createRequestsRouter(requestsHandler);
+  app.use('/api/requests', requestsRouter);
+  app.use('/api/v1/requests', requestsRouter);
+
 
   // 5. 404 Handler for undefined routes
   app.use((req, res) => {
