@@ -18,6 +18,7 @@ interface MainWorkspaceProps {
   activeChannel?: ChannelId;
   onOpenImpactStudio: () => void;
   onTriggerAnalyze?: () => void;
+  onSearchChange?: (query: string) => void;
   isAnalyzing?: boolean;
   filter?: 'All' | 'Pending' | 'Approved' | 'Blocked';
   setFilter?: (filter: 'All' | 'Pending' | 'Approved' | 'Blocked') => void;
@@ -33,6 +34,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
   activeChannel,
   onOpenImpactStudio,
   onTriggerAnalyze,
+  onSearchChange,
   isAnalyzing,
   filter = 'All',
   setFilter,
@@ -62,6 +64,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
         request={request}
         onOpenImpactStudio={onOpenImpactStudio}
         onTriggerAnalyze={onTriggerAnalyze}
+        onSearchChange={onSearchChange}
         isAnalyzing={isAnalyzing}
         onBack={onBackHome}
       />

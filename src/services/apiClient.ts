@@ -3,7 +3,7 @@ import { RequestDetailResponse, RequestSummaryResponse } from './response.mapper
 import { AnalysisResult, ImpactGraph } from '../models/analysisResult.model';
 import { ExplanationRecord } from '../ai/types/explanation.model';
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = typeof window !== 'undefined' ? '/api' : 'http://localhost:4000/api';
 
 export class BlastGuardApiClient {
   private static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -101,4 +101,3 @@ export class BlastGuardApiClient {
     });
   }
 }
-
