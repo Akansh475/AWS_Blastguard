@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { MascotIllustration } from './components/MascotIllustration';
 import { BlastGuardDashboardView } from './components/dashboard/BlastGuardDashboardView';
 
-export const App: React.FC = () => {
+export const AppRoot: React.FC = () => {
   // Client-side route state: '/' or '/dashboard'
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -146,4 +146,4 @@ export const App: React.FC = () => {
   );
 };
 
-export default App;
+export default AppRoot;

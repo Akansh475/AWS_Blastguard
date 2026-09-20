@@ -48,8 +48,8 @@ export function validateCreateChangeRequest(data: unknown): CreateChangeRequestD
   try {
     return createChangeRequestSchema.parse(data) as CreateChangeRequestDTO;
   } catch (error) {
-    if (error instanceof ZodError) {
-      const details = error.errors.map((err) => ({
+    if (error instanceof z.ZodError) {
+      const details = error.errors.map((err: z.ZodIssue) => ({
         field: err.path.join('.'),
         message: err.message,
       }));

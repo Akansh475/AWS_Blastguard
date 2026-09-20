@@ -85,7 +85,7 @@ export class BedrockExplanationService {
     let explanationResult: ExplanationResult;
     let isFallback = false;
     const now = new Date().toISOString();
-    const model = config.mode === 'aws' ? config.bedrockModelId : 'mock-bedrock-v1';
+    const model = (config.mode === 'aws' ? config.bedrockModelId : 'mock-bedrock-v1') || 'mock-bedrock-v1';
 
     try {
       // 2. Invoke Bedrock Client

@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Sparkles,
-  AlertOctagon,
   CheckCircle,
-  HelpCircle,
+  Lightbulb,
+  Sparkles,
+  Bot,
   ShieldAlert,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-  ArrowRight
+  Clock,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 import { DashboardChangeRequest } from '../../data/mockData';
-import { BlastGuardApiClient } from '../../services/apiClient';
-import { ExplanationRecord } from '../../ai/types/explanation.model';
 
 interface AIExplanationCardProps {
   request: DashboardChangeRequest;
@@ -23,136 +20,205 @@ export const AIExplanationCard: React.FC<AIExplanationCardProps> = ({
   request,
   onOpenChatbot,
 }) => {
-  const [explanation, setExplanation] = useState<ExplanationRecord | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedPrompt, setSelectedPrompt] = useState<string>('Why was this blocked?');
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'summary' | 'security' | 'policies' | 'recommendations'>('summary');
 
-  // Load explanation on request change or trigger
-  const fetchExplanation = async (force = false) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await BlastGuardApiClient.explainRequest(request.id, force);
-      setExplanation(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not generate explanation');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 6 AI Agents execution data
+  const agents = [
+    { name: 'Supervisor Agent', desc: 'Orchestrating analysis...', time: '2.1s' },
+    { name: 'Dependency Agent', desc: `Found ${request.affectedResources} related resources`, time: '3.4s' },
+    { name: 'Topology Agent', desc: 'Mapped network relationships', time: '2.8s' },
+    { name: 'Security Agent', desc: 'Detected 2 security concerns', time: '1.9s' },
+    { name: 'Policy Agent', desc: 'Found 1 policy violation', time: '1.2s' },
+    { name: 'Impact Agent', desc: 'Calculated blast radius...', time: '1.0s' },
+  ];
 
-  useEffect(() => {
-    // Automatically load or use cached explanation
-    fetchExplanation(false);
-  }, [request.id]);
-
-  const promptOptions = [
-    'Why was this blocked?',
-    'Show affected resources',
-    'Explain the risk',
+  // Recent Activity events
+  const activities = [
+    { title: 'Analysis completed', time: '12.4s ago', status: 'done' },
+    { title: 'Impact calculation finished', time: '13.1s ago', status: 'done' },
+    { title: 'Policy check completed', time: '14.3s ago', status: 'done' },
+    { title: 'Security analysis completed', time: '16.2s ago', status: 'done' },
+    { title: 'Dependency mapping completed', time: '18.5s ago', status: 'done' },
+    { title: 'Analysis started', time: '20.1s ago', status: 'start' },
   ];
 
   return (
-    <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
-      {/* Header: Title + Prompt Chips */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#BAF084] to-[#A4EB67] border border-[#8CD94B]/60 flex items-center justify-center text-[#1E4726] shadow-xs">
-            <Sparkles className="w-4 h-4 text-[#1E4726]" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-[#1E4726] tracking-tight">
-              ASK BLASTGUARD
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full font-sans select-none">
+      {/* ========================================================================= */}
+      {/* CARD 1: AI AGENT EXECUTION (Cols 1-4) */}
+      {/* ========================================================================= */}
+      <div className="lg:col-span-4 bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-5 shadow-sm shadow-[rgba(180,160,140,0.06)] flex flex-col justify-between">
+        <div className="flex flex-col gap-3">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black text-[#18181B] tracking-tight">
+              AI Agent Execution
             </h3>
-            <p className="text-[11px] text-[#54825A]">
-              Amazon Bedrock AI-Powered Safety Explanation
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] text-[#16A34A] text-[10px] font-bold">
+              Completed in 12.4s
+            </span>
+          </div>
+
+          {/* Agents List */}
+          <div className="space-y-2.5 mt-1">
+            {agents.map((agent, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-5 h-5 rounded-full bg-[#F0FDF4] text-[#16A34A] flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-3.5 h-3.5 fill-[#16A34A] text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-[#18181B] truncate leading-tight">
+                      {agent.name}
+                    </div>
+                    <div className="text-[10px] text-[#71717A] truncate leading-tight">
+                      {agent.desc}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-semibold text-[#16A34A] shrink-0">
+                  {agent.time}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* CARD 2: AGENT INSIGHTS (Cols 5-8) */}
+      {/* ========================================================================= */}
+      <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-5 shadow-sm shadow-[rgba(180,160,140,0.06)] flex flex-col justify-between">
+        <div className="flex flex-col gap-3">
+          {/* Header + Tabs */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-[#18181B] tracking-tight">
+                Agent Insights
+              </h3>
+            </div>
+
+            {/* Insight Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+              <button
+                onClick={() => setActiveTab('summary')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'summary'
+                    ? 'bg-[#FFF4EB] text-[#FF7A30] border border-[#FED7AA]'
+                    : 'text-[#71717A] hover:text-[#18181B] bg-transparent'
+                }`}
+              >
+                Summary
+              </button>
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'security'
+                    ? 'bg-[#FFF4EB] text-[#FF7A30] border border-[#FED7AA]'
+                    : 'text-[#71717A] hover:text-[#18181B] bg-transparent'
+                }`}
+              >
+                Security
+              </button>
+              <button
+                onClick={() => setActiveTab('policies')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'policies'
+                    ? 'bg-[#FFF4EB] text-[#FF7A30] border border-[#FED7AA]'
+                    : 'text-[#71717A] hover:text-[#18181B] bg-transparent'
+                }`}
+              >
+                Policies
+              </button>
+              <button
+                onClick={() => setActiveTab('recommendations')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'recommendations'
+                    ? 'bg-[#FFF4EB] text-[#FF7A30] border border-[#FED7AA]'
+                    : 'text-[#71717A] hover:text-[#18181B] bg-transparent'
+                }`}
+              >
+                Recommendations
+              </button>
+            </div>
+          </div>
+
+          {/* AI Analysis Summary */}
+          <div className="flex flex-col gap-2 pt-1">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-lg bg-[#FAF5FF] border border-[#E9D5FF] text-[#9333EA] flex items-center justify-center text-[10px] font-black">
+                Ai
+              </div>
+              <span className="text-xs font-bold text-[#18181B]">
+                AI Analysis Summary
+              </span>
+            </div>
+
+            <p className="text-[11px] text-[#52525B] leading-relaxed">
+              {activeTab === 'summary' &&
+                `Deleting ${request.resourceName} will directly impact ${request.criticalServices} critical services including the Payment API, which handles 2.4M requests per hour. This change will also affect the primary RDS database and violate production change policies. The blast radius extends to ${request.affectedResources} resources across multiple service tiers, with a high risk of customer-facing downtime.`}
+              {activeTab === 'security' &&
+                `Active Elastic Network Interfaces (ENIs) are bound to ${request.resourceName}. Deletion will instantly severed private communication channels between Payment DB and Payment API.`}
+              {activeTab === 'policies' &&
+                `Violates POLICY-002: Production VPC subnets with active database dependencies cannot be destroyed via automated pipelines without Senior Staff approval.`}
+              {activeTab === 'recommendations' &&
+                `1. Provision replacement subnet in secondary AZ. 2. Migrate RDS read replicas. 3. Update route tables before deleting ${request.resourceName}.`}
             </p>
           </div>
         </div>
 
-        {/* Quick Prompt Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-          {promptOptions.map((prompt) => (
-            <button
-              key={prompt}
-              onClick={() => {
-                setSelectedPrompt(prompt);
-                fetchExplanation(false);
-              }}
-              className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                selectedPrompt === prompt
-                  ? 'bg-[#276735] text-white shadow-xs'
-                  : 'bg-[#F4FDEE] hover:bg-[#E2F9D2] text-[#54825A] border border-[#BCE99A]'
-              }`}
-            >
-              {prompt}
-            </button>
-          ))}
+        {/* Tip Box (Yellow / Amber) */}
+        <div className="p-2.5 rounded-2xl bg-[#FFFBEB] border border-[#FEF3C7] flex items-start gap-2 mt-3">
+          <Lightbulb className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+          <span className="text-[10.5px] text-[#92400E] leading-tight font-medium">
+            Consider creating a new subnet and migrating services before decommissioning this subnet.
+          </span>
         </div>
       </div>
 
-      {/* Explanation Content Box */}
-      <div className="p-4 rounded-xl bg-[#F4FDEE] border border-[#BCE99A] flex flex-col gap-3">
-        {isLoading ? (
-          <div className="flex items-center gap-3 py-4 text-xs font-semibold text-[#54825A]">
-            <RefreshCw className="w-4 h-4 animate-spin text-[#15803D]" />
-            <span>Consulting Amazon Bedrock infrastructure intelligence...</span>
+      {/* ========================================================================= */}
+      {/* CARD 3: RECENT ACTIVITY (Cols 9-12) */}
+      {/* ========================================================================= */}
+      <div className="lg:col-span-3 bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-5 shadow-sm shadow-[rgba(180,160,140,0.06)] flex flex-col justify-between">
+        <div className="flex flex-col gap-3">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black text-[#18181B] tracking-tight">
+              Recent Activity
+            </h3>
+            <button className="text-[10px] font-bold text-[#2563EB] hover:underline cursor-pointer">
+              View All
+            </button>
           </div>
-        ) : error ? (
-          <div className="flex items-center gap-2.5 text-xs text-[#EF4444]">
-            <AlertOctagon className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        ) : explanation ? (
-          <>
-            {/* Summary Banner */}
-            <div className="text-xs text-[#1E4726] font-medium leading-relaxed">
-              <span className="font-bold text-[#EF4444]">
-                {explanation.explanation.headline || 'Change Blocked'}:{' '}
-              </span>
-              {explanation.explanation.summary ||
-                `${request.resourceName} is production infrastructure with dependencies on multiple critical services. The proposed deletion affects ${request.affectedResources} resources, including ${request.criticalServices} critical services and ${request.externalDependencies} external dependencies.`}
-            </div>
 
-            {/* Why Blocked Bullet Points */}
-            {explanation.explanation.whyBlocked && (
-              <div className="space-y-1.5 pt-2 border-t border-[#BCE99A]/60">
-                <div className="text-[11px] font-bold text-[#54825A] uppercase tracking-wider">
-                  Key Findings
-                </div>
-                <div className="space-y-1">
-                  {Array.isArray(explanation.explanation.whyBlocked) ? (
-                    explanation.explanation.whyBlocked.map((reason, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-[#1E4726]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 mt-1.5" />
-                        <span>{reason}</span>
-                      </div>
-                    ))
+          {/* Timeline List */}
+          <div className="space-y-3 mt-1">
+            {activities.map((act, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {act.status === 'done' ? (
+                    <div className="w-4 h-4 rounded-full bg-[#F0FDF4] text-[#16A34A] flex items-center justify-center shrink-0">
+                      <CheckCircle className="w-3.5 h-3.5 fill-[#16A34A] text-white" />
+                    </div>
                   ) : (
-                    <div className="flex items-start gap-2 text-xs text-[#1E4726]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 mt-1.5" />
-                      <span>{explanation.explanation.whyBlocked}</span>
+                    <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                      <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
                     </div>
                   )}
+                  <span className="text-xs font-bold text-[#18181B] truncate">
+                    {act.title}
+                  </span>
                 </div>
+                <span className="text-[10px] text-[#71717A] shrink-0 font-medium">
+                  {act.time}
+                </span>
               </div>
-            )}
-
-            {/* Recommended Action */}
-            {explanation.explanation.recommendedActions && explanation.explanation.recommendedActions.length > 0 && (
-              <div className="p-3 rounded-lg bg-[#FFFFFF] border border-[#BCE99A] text-xs text-[#1E4726] shadow-2xs">
-                <span className="font-bold text-[#15803D]">Recommended Review: </span>
-                <span>{explanation.explanation.recommendedActions[0]}</span>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-xs text-[#54825A]">
-            Click a prompt above to generate a deterministic AI safety explanation.
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
+
+export default AIExplanationCard;

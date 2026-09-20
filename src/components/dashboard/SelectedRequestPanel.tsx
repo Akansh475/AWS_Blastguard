@@ -1,26 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Layers,
   AlertTriangle,
-  Link2,
-  ArrowRight,
-  Shield,
-  MapPin,
-  Network,
   Database,
+  Layers,
+  Link2,
+  ShieldAlert,
+  ShieldCheck,
+  ChevronRight,
+  ArrowRight,
   X,
-  Check,
-  Server,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  Info
+  Radio,
+  Server
 } from 'lucide-react';
 import { DashboardChangeRequest } from '../../data/mockData';
-import { ServiceIcon } from './ServiceIcon';
-import { BlastGuardApiClient } from '../../services/apiClient';
-import { ExplanationRecord } from '../../ai/types/explanation.model';
 
 interface SelectedRequestPanelProps {
   request: DashboardChangeRequest;
@@ -31,363 +23,217 @@ export const SelectedRequestPanel: React.FC<SelectedRequestPanelProps> = ({
   request,
   onViewImpact,
 }) => {
-  const [explanation, setExplanation] = useState<ExplanationRecord | null>(null);
-  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
-  const [isExplanationOpen, setIsExplanationOpen] = useState(false);
-  const [explanationError, setExplanationError] = useState<string | null>(null);
-
-  // Risk Gauge Stroke calculation
   const score = request.riskScore;
-  const radius = 54;
+  const radius = 62;
   const circumference = 2 * Math.PI * radius;
-  // Arc is ~260 degrees gauge
-  const maxArc = circumference * 0.78;
-  const strokeDashoffset = maxArc - (score / 100) * maxArc;
-
-  let gaugeColor = '#EF4444';
-  let riskBadgeClass = 'bg-[#FFECEC] text-[#E03131] border border-[#FCD5CF]';
-  if (score < 30) {
-    gaugeColor = '#22C55E';
-    riskBadgeClass = 'bg-[#ECFDF5] text-[#16A34A] border border-[#BBF7D0]';
-  } else if (score < 70) {
-    gaugeColor = '#F59E0B';
-    riskBadgeClass = 'bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]';
-  }
-
-  const isBlocked = request.status === 'Blocked';
-  const isApproved = request.status === 'Approved';
-
-  const handleFetchExplanation = async () => {
-    if (explanation) {
-      setIsExplanationOpen(!isExplanationOpen);
-      return;
-    }
-
-    setIsLoadingExplanation(true);
-    setExplanationError(null);
-    try {
-      const result = await BlastGuardApiClient.explainRequest(request.id);
-      setExplanation(result);
-      setIsExplanationOpen(true);
-    } catch (err) {
-      setExplanationError(err instanceof Error ? err.message : 'Could not generate explanation');
-      setIsExplanationOpen(true);
-    } finally {
-      setIsLoadingExplanation(false);
-    }
-  };
+  // Arc is ~220 degrees
+  const arcLength = circumference * 0.65;
+  const strokeDashoffset = arcLength - (score / 100) * arcLength;
 
   return (
-    <div className="flex flex-col gap-5 w-full select-none">
-      {/* ========================================================================= */}
-      {/* 1. TOP CARD: CHANGE REQUEST DETAILS & 4 METADATA CARDS */}
-      {/* ========================================================================= */}
-      <section className="glass-panel p-6 sm:p-7 flex flex-col gap-6 shadow-[0_12px_40px_rgba(210,180,110,0.14)]">
-        {/* Header: Action Icon + Title + Status Pill */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            {/* 3D Outline Wireframe Box in Red Square */}
-            <div className="w-14 h-14 rounded-2xl bg-[#FFECEC] border border-[#FCD5CF] flex items-center justify-center shrink-0 shadow-xs">
-              <ServiceIcon category={request.serviceCategory} className="w-7 h-7" isRed={true} />
-            </div>
-
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold tracking-[0.16em] uppercase text-[#8E8E93]">
-                CHANGE REQUEST
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black text-[#18181B] tracking-tight mt-0.5 truncate">
-                {request.title}
-              </h1>
-              <div className="text-xs font-medium text-[#71717A] mt-0.5">
-                Requested 2 minutes ago
-              </div>
-            </div>
+    <aside className="w-full lg:w-[330px] xl:w-[350px] shrink-0 bg-[#FFFFFF] border-l border-[#EFE8DF] p-5 sm:p-6 flex flex-col justify-between gap-5 select-none font-sans shadow-[ -2px_0_12px_rgba(180,160,140,0.04)]">
+      <div className="flex flex-col gap-5">
+        {/* ========================================================================= */}
+        {/* 1. HEADER (Risk Analysis + ✕ CRITICAL) */}
+        {/* ========================================================================= */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-[#EF4444]" />
+            <h2 className="text-sm font-black text-[#18181B] tracking-tight">
+              Risk Analysis
+            </h2>
           </div>
 
-          {/* Status Badge Pill (✕ Blocked / ✓ Approved / • Pending) */}
-          <span
-            className={`px-4 py-1.5 rounded-full text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-xs ${
-              isBlocked
-                ? 'bg-[#FFECEC] text-[#E03131] border border-[#FCD5CF]'
-                : isApproved
-                ? 'bg-[#ECFDF5] text-[#16A34A] border border-[#BBF7D0]'
-                : 'bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]'
-            }`}
-          >
-            {isBlocked && <X className="w-3.5 h-3.5 stroke-[3]" />}
-            {isApproved && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-            <span>{request.status}</span>
+          <span className="px-3 py-1 rounded-full bg-[#FFF1F2] border border-[#FECDD3] text-[#EF4444] text-xs font-black flex items-center gap-1">
+            <X className="w-3.5 h-3.5 stroke-[3]" />
+            <span>CRITICAL</span>
           </span>
         </div>
 
-        {/* 4 Compact Metadata Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-          {/* 1. Resource */}
-          <div className="p-3 rounded-2xl bg-white/55 border border-white/80 backdrop-blur-md flex flex-col gap-1.5 shadow-xs">
-            <span className="text-[11px] font-medium text-[#71717A]">Resource</span>
-            <div className="flex items-center gap-1.5 font-bold text-xs text-[#18181B] truncate">
-              <div className="p-0.5 rounded text-[#52525B]">
-                <Database className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">{request.resourceName}</span>
-            </div>
-          </div>
+        {/* ========================================================================= */}
+        {/* 2. RISK GAUGE (87/100 ARC + TEXT) */}
+        {/* ========================================================================= */}
+        <div className="flex flex-col items-center justify-center pt-2">
+          <div className="relative w-40 h-28 flex items-center justify-center">
+            <svg className="w-40 h-40 -rotate-[150deg] transform" viewBox="0 0 160 160">
+              {/* Background Arc Track */}
+              <circle
+                cx="80"
+                cy="80"
+                r={radius}
+                stroke="#FEE2E2"
+                strokeWidth="14"
+                fill="transparent"
+                strokeDasharray={`${arcLength} ${circumference}`}
+                strokeLinecap="round"
+              />
+              {/* Active Progress Gradient Arc */}
+              <circle
+                cx="80"
+                cy="80"
+                r={radius}
+                stroke="#EF4444"
+                strokeWidth="14"
+                fill="transparent"
+                strokeDasharray={`${arcLength} ${circumference}`}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                className="transition-all duration-700 ease-out"
+              />
+            </svg>
 
-          {/* 2. Type */}
-          <div className="p-3 rounded-2xl bg-white/55 border border-white/80 backdrop-blur-md flex flex-col gap-1.5 shadow-xs">
-            <span className="text-[11px] font-medium text-[#71717A]">Type</span>
-            <div className="flex items-center gap-1.5 font-bold text-xs text-[#18181B] truncate">
-              <div className="p-0.5 rounded text-[#52525B]">
-                <Network className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">{request.resourceType}</span>
-            </div>
-          </div>
-
-          {/* 3. Region */}
-          <div className="p-3 rounded-2xl bg-white/55 border border-white/80 backdrop-blur-md flex flex-col gap-1.5 shadow-xs">
-            <span className="text-[11px] font-medium text-[#71717A]">Region</span>
-            <div className="flex items-center gap-1.5 font-bold text-xs text-[#18181B] truncate">
-              <div className="p-0.5 rounded text-[#52525B]">
-                <MapPin className="w-3.5 h-3.5" />
-              </div>
-              <span className="truncate">{request.region}</span>
-            </div>
-          </div>
-
-          {/* 4. Environment */}
-          <div className="p-3 rounded-2xl bg-white/55 border border-white/80 backdrop-blur-md flex flex-col gap-1.5 shadow-xs">
-            <span className="text-[11px] font-medium text-[#71717A]">Environment</span>
-            <div className="flex items-center gap-1.5 font-bold text-xs text-[#18181B] truncate">
-              <div className="p-0.5 rounded text-[#52525B]">
-                <Server className="w-3.5 h-3.5" />
-              </div>
-              <span className="px-2 py-0.5 rounded-md bg-[#FFECEC] text-[#E03131] border border-[#FCD5CF] text-[10px] font-bold">
-                {request.environment}
+            {/* Centered Score */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center mt-2">
+              <span className="text-4xl font-black text-[#18181B] leading-none tracking-tight">
+                {score}
+              </span>
+              <span className="text-xs font-bold text-[#71717A] mt-0.5">
+                / 100
               </span>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ========================================================================= */}
-      {/* 2. BOTTOM CARD: IMPACT OVERVIEW + METRICS + AI EXPLANATION */}
-      {/* ========================================================================= */}
-      <section className="glass-panel p-6 sm:p-7 flex flex-col gap-6 shadow-[0_12px_40px_rgba(210,180,110,0.14)]">
-        {/* Header: "Impact Overview" + "View Impact →" Button */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-black text-[#18181B] tracking-tight">
-            Impact Overview
-          </h2>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleFetchExplanation}
-              disabled={isLoadingExplanation}
-              className="group flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 border border-amber-500/30 backdrop-blur-md text-xs font-bold transition-all shadow-xs active:scale-98 cursor-pointer disabled:opacity-50"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>{isLoadingExplanation ? 'Analyzing...' : isExplanationOpen ? 'Hide AI Explanation' : 'Why was this blocked?'}</span>
-              {isExplanationOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            <button
-              onClick={onViewImpact}
-              className="group flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/60 hover:bg-white border border-white/85 backdrop-blur-md text-xs font-bold text-[#18181B] transition-all shadow-xs hover:shadow active:scale-98 cursor-pointer"
-            >
-              <span>View Impact</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+          {/* Subtext */}
+          <p className="text-xs text-center font-medium text-[#52525B] max-w-[240px] mt-1 leading-snug">
+            High chance of service disruption across production environment.
+          </p>
         </div>
 
-        {/* Centerpiece: Risk Gauge (Left) + 3 Metrics Cards (Right) */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
-          {/* Left: Circular Risk Visualization (Cols 1-5) */}
-          <div className="sm:col-span-5 flex flex-col items-center justify-center">
-            <div className="relative w-44 h-44 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 140 140">
-                {/* Background Track */}
-                <circle
-                  cx="70"
-                  cy="70"
-                  r={radius}
-                  stroke="#FEE2E2"
-                  strokeWidth="12"
-                  fill="transparent"
-                  strokeDasharray={maxArc}
-                  strokeDashoffset="0"
-                  strokeLinecap="round"
-                />
-                {/* Active Progress Arc */}
-                <circle
-                  cx="70"
-                  cy="70"
-                  r={radius}
-                  stroke={gaugeColor}
-                  strokeWidth="12"
-                  fill="transparent"
-                  strokeDasharray={maxArc}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="transition-all duration-700 ease-out"
-                />
-              </svg>
-
-              {/* Center Score Text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-4xl sm:text-5xl font-black text-[#18181B] leading-none tracking-tight">
-                  {request.riskScore}
-                </span>
-                <span className="text-xs font-semibold text-[#8E8E93] mt-1">
-                  / 100
-                </span>
-              </div>
-            </div>
-
-            {/* Critical Pill Badge */}
-            <span className={`-mt-4 px-4 py-1 rounded-full text-xs font-bold ${riskBadgeClass} z-10 shadow-xs backdrop-blur-md`}>
-              {request.riskLevel}
+        {/* ========================================================================= */}
+        {/* 3. THREE METRIC COUNTER TILES */}
+        {/* ========================================================================= */}
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          {/* Affected */}
+          <div className="p-2.5 rounded-2xl bg-[#FFF1F2] border border-[#FECDD3] flex flex-col items-center text-center">
+            <span className="text-xl font-black text-[#E11D48] leading-none">
+              {request.affectedResources}
+            </span>
+            <span className="text-[10px] font-semibold text-[#71717A] leading-tight mt-1">
+              Affected Resources
             </span>
           </div>
 
-          {/* Right: 3 Large Stacked Metric Cards (Cols 6-12) */}
-          <div className="sm:col-span-7 flex flex-col gap-2.5">
-            {/* Metric 1: 11 Affected resources */}
-            <div className="p-3.5 rounded-2xl bg-white/55 hover:bg-white/80 border border-white/80 backdrop-blur-md flex items-center gap-4 shadow-xs transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-white/80 border border-white flex items-center justify-center text-[#18181B] shrink-0 shadow-2xs">
-                <Layers className="w-5 h-5 stroke-[2]" />
+          {/* Critical */}
+          <div className="p-2.5 rounded-2xl bg-[#FFF4EB] border border-[#FED7AA] flex flex-col items-center text-center">
+            <span className="text-xl font-black text-[#EA580C] leading-none">
+              {request.criticalServices}
+            </span>
+            <span className="text-[10px] font-semibold text-[#71717A] leading-tight mt-1">
+              Critical Services
+            </span>
+          </div>
+
+          {/* External */}
+          <div className="p-2.5 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] flex flex-col items-center text-center">
+            <span className="text-xl font-black text-[#2563EB] leading-none">
+              {request.externalDependencies}
+            </span>
+            <span className="text-[10px] font-semibold text-[#71717A] leading-tight mt-1">
+              External Dependencies
+            </span>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 4. RECOMMENDED DECISION CARD */}
+        {/* ========================================================================= */}
+        <div className="p-3.5 rounded-2xl bg-[#FFF5F5] border border-[#FED7D7] flex flex-col gap-1.5 shadow-2xs">
+          <span className="text-[11px] font-medium text-[#71717A]">
+            Recommended Decision
+          </span>
+          <div className="flex items-center justify-between text-[#EF4444] cursor-pointer hover:opacity-90 transition-opacity">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-[#EF4444] text-white flex items-center justify-center">
+                <X className="w-3.5 h-3.5 stroke-[3]" />
               </div>
-              <div>
-                <div className="text-2xl font-black text-[#18181B] leading-none tracking-tight">
-                  {request.affectedResources}
+              <span className="text-xs font-black tracking-wide">
+                BLOCK CHANGE
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#EF4444]" />
+          </div>
+          <p className="text-[10.5px] text-[#71717A] font-medium leading-tight mt-0.5">
+            This change poses a high risk to critical services.
+          </p>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 5. KEY FINDINGS LIST */}
+        {/* ========================================================================= */}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-1.5">
+            <ShieldAlert className="w-4 h-4 text-[#18181B]" />
+            <h3 className="text-xs font-black text-[#18181B] tracking-tight">
+              Key Findings
+            </h3>
+          </div>
+
+          <div className="space-y-2">
+            {/* Finding 1 */}
+            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#EFE8DF] flex items-start gap-2.5">
+              <div className="w-6 h-6 rounded-xl bg-[#FFF1F2] text-[#EF4444] flex items-center justify-center shrink-0 mt-0.5">
+                <AlertTriangle className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-[#18181B] leading-tight">
+                  Payment API will be unavailable
                 </div>
-                <div className="text-xs font-medium text-[#71717A] mt-0.5">
-                  Affected resources
+                <div className="text-[10.5px] text-[#71717A] leading-tight mt-0.5 font-medium">
+                  This subnet hosts the primary payment service.
                 </div>
               </div>
             </div>
 
-            {/* Metric 2: 3 Critical services */}
-            <div className="p-3.5 rounded-2xl bg-white/55 hover:bg-white/80 border border-white/80 backdrop-blur-md flex items-center gap-4 shadow-xs transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-[#FFF2F2] border border-[#FCD5CF] flex items-center justify-center text-[#E03131] shrink-0 shadow-2xs">
-                <AlertTriangle className="w-5 h-5 stroke-[2]" />
+            {/* Finding 2 */}
+            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#EFE8DF] flex items-start gap-2.5">
+              <div className="w-6 h-6 rounded-xl bg-[#FFF4EB] text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
+                <Database className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
-              <div>
-                <div className="text-2xl font-black text-[#18181B] leading-none tracking-tight">
-                  {request.criticalServices}
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-[#18181B] leading-tight">
+                  RDS database will be affected
                 </div>
-                <div className="text-xs font-medium text-[#71717A] mt-0.5">
-                  Critical services
+                <div className="text-[10.5px] text-[#71717A] leading-tight mt-0.5 font-medium">
+                  Primary database in the same subnet.
                 </div>
               </div>
             </div>
 
-            {/* Metric 3: 2 External dependencies */}
-            <div className="p-3.5 rounded-2xl bg-white/55 hover:bg-white/80 border border-white/80 backdrop-blur-md flex items-center gap-4 shadow-xs transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-white/80 border border-white flex items-center justify-center text-[#18181B] shrink-0 shadow-2xs">
-                <Link2 className="w-5 h-5 stroke-[2]" />
+            {/* Finding 3 */}
+            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#EFE8DF] flex items-start gap-2.5">
+              <div className="w-6 h-6 rounded-xl bg-[#F0FDF4] text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
-              <div>
-                <div className="text-2xl font-black text-[#18181B] leading-none tracking-tight">
-                  {request.externalDependencies}
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-[#18181B] leading-tight">
+                  Violates POLICY-002
                 </div>
-                <div className="text-xs font-medium text-[#71717A] mt-0.5">
-                  External dependencies
+                <div className="text-[10.5px] text-[#71717A] leading-tight mt-0.5 font-medium">
+                  Production subnets require senior approval.
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Structured AI Explanation Card */}
-        {isExplanationOpen && explanation && (
-          <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80 backdrop-blur-md flex flex-col gap-3.5 shadow-sm animate-fadeIn">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-800 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-extrabold text-amber-950 uppercase tracking-wider">
-                  Amazon Bedrock AI Safety Explanation
-                </span>
-              </div>
-              <span className="text-[10px] text-amber-800/80 font-mono">
-                {explanation.model}
-              </span>
-            </div>
+        {/* View Full Report Button */}
+        <button
+          onClick={onViewImpact}
+          className="w-full py-2.5 rounded-2xl bg-[#FFFFFF] hover:bg-[#FAF7F2] border border-[#EFE8DF] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+        >
+          <span>View Full Report</span>
+          <ArrowRight className="w-3.5 h-3.5 text-[#FF7A30]" />
+        </button>
+      </div>
 
-            <div className="text-xs font-bold text-amber-900 leading-snug">
-              {explanation.explanation.headline}
-            </div>
-
-            <p className="text-xs text-amber-900/90 leading-relaxed bg-white/60 p-3 rounded-xl border border-amber-100">
-              {explanation.explanation.summary}
-            </p>
-
-            {/* Key Reasons / Why Blocked */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
-                Why This Decision Was Made:
-              </span>
-              <ul className="text-xs text-amber-900/90 flex flex-col gap-1 pl-1">
-                {Array.isArray(explanation.explanation.whyBlocked) ? (
-                  explanation.explanation.whyBlocked.map((reason, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5">
-                      <span className="text-amber-600 font-bold">•</span>
-                      <span>{reason}</span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-amber-600 font-bold">•</span>
-                    <span>{explanation.explanation.whyBlocked}</span>
-                  </li>
-                )}
-              </ul>
-            </div>
-
-            {/* Recommended Actions */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                Recommended Next Steps:
-              </span>
-              <ul className="text-xs text-amber-900/90 flex flex-col gap-1 pl-1">
-                {explanation.explanation.recommendedActions?.map((action, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>{action}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* AI Summary Card (Static Fallback when collapsed) */}
-        {!isExplanationOpen && (
-          <div className="p-4 rounded-2xl bg-white/55 border border-white/80 backdrop-blur-md flex items-start gap-3.5 shadow-xs">
-            <div className="w-8 h-8 rounded-xl bg-white/80 border border-white flex items-center justify-center text-[#18181B] shrink-0 shadow-2xs mt-0.5">
-              <Shield className="w-4 h-4 stroke-[2.2]" />
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#18181B]">AI Summary</span>
-                <span className="px-2 py-0.2 rounded-full bg-[#E0E7FF] text-[#4F46E5] text-[10px] font-extrabold uppercase tracking-wide">
-                  BEDROCK
-                </span>
-              </div>
-              <p className="text-xs text-[#52525B] leading-relaxed mt-1">
-                This change will delete a subnet in a production VPC and impact 11 resources across 3 critical services.
-              </p>
-            </div>
-          </div>
-        )}
-      </section>
-    </div>
+      {/* Handwritten Footer */}
+      <div className="text-center pt-2">
+        <span className="font-handwriting text-sm text-[#B45309]/80 rotate-1 block">
+          Build safely. Deploy confidently. ♡
+        </span>
+      </div>
+    </aside>
   );
 };
 
+export default SelectedRequestPanel;

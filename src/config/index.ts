@@ -10,9 +10,9 @@ export interface AppConfig {
   nodeEnv: string;
   mode: BlastGuardMode;
   awsRegion: string;
-  dynamoDbTableName: string;
+  dynamoDbTableName?: string;
   dynamoDbEndpoint?: string;
-  bedrockModelId: string;
+  bedrockModelId?: string;
 }
 
 export const config: AppConfig = {

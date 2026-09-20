@@ -16,7 +16,7 @@ export class BedrockClientWrapper implements IBedrockClient {
   private readonly modelId: string;
 
   constructor(client?: BedrockRuntimeClient, modelId?: string) {
-    this.modelId = modelId || config.bedrockModelId;
+    this.modelId = modelId || config.bedrockModelId || 'anthropic.claude-3-5-sonnet-20240620-v1:0';
     this.client =
       client ||
       new BedrockRuntimeClient({

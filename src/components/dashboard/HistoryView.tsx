@@ -14,7 +14,7 @@ export const HistoryView: React.FC = () => {
       env: 'Production',
       region: 'ap-south-1',
       action: 'DELETE',
-      author: 'alex.k (Cloud Platform)',
+      author: 'Akansh Mehra',
       time: '14 minutes ago',
       decision: 'BLOCKED',
       riskScore: 87,
@@ -74,7 +74,7 @@ export const HistoryView: React.FC = () => {
       env: 'Production',
       region: 'us-east-1',
       action: 'TERMINATE',
-      author: 'alex.k',
+      author: 'Akansh Mehra',
       time: '12 hours ago',
       decision: 'APPROVED',
       riskScore: 12,
@@ -110,48 +110,48 @@ export const HistoryView: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col gap-5 w-full select-none">
-      {/* 1. Header & Summary Stats */}
+    <div className="flex flex-col gap-5 w-full select-none font-sans">
+      {/* 1. Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-4 flex flex-col gap-1 shadow-xs">
-          <span className="text-[11px] font-bold text-[#54825A] uppercase tracking-wider">TOTAL EVALUATED</span>
-          <span className="text-2xl font-black text-[#1E4726]">142</span>
+        <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-4 flex flex-col gap-1 shadow-2xs">
+          <span className="text-[11px] font-bold text-[#71717A] uppercase tracking-wider">TOTAL EVALUATED</span>
+          <span className="text-2xl font-black text-[#18181B]">142</span>
           <span className="text-[10px] text-[#16A34A] font-bold">100% Analyzed in &lt;500ms</span>
         </div>
-        <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-4 flex flex-col gap-1 shadow-xs">
-          <span className="text-[11px] font-bold text-[#54825A] uppercase tracking-wider">OUTAGES PREVENTED</span>
-          <span className="text-2xl font-black text-[#E03131]">29</span>
-          <span className="text-[10px] text-[#E03131] font-bold">High Blast Radius Blocked</span>
+        <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-4 flex flex-col gap-1 shadow-2xs">
+          <span className="text-[11px] font-bold text-[#71717A] uppercase tracking-wider">OUTAGES PREVENTED</span>
+          <span className="text-2xl font-black text-[#EF4444]">29</span>
+          <span className="text-[10px] text-[#EF4444] font-bold">High Blast Radius Blocked</span>
         </div>
-        <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-4 flex flex-col gap-1 shadow-xs">
-          <span className="text-[11px] font-bold text-[#54825A] uppercase tracking-wider">SAFE CHANGES APPROVED</span>
+        <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-4 flex flex-col gap-1 shadow-2xs">
+          <span className="text-[11px] font-bold text-[#71717A] uppercase tracking-wider">SAFE CHANGES APPROVED</span>
           <span className="text-2xl font-black text-[#16A34A]">113</span>
           <span className="text-[10px] text-[#16A34A] font-bold">Zero Production Regressions</span>
         </div>
-        <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-4 flex flex-col gap-1 shadow-xs">
-          <span className="text-[11px] font-bold text-[#54825A] uppercase tracking-wider">POLICY COMPLIANCE</span>
-          <span className="text-2xl font-black text-[#1E4726]">100%</span>
-          <span className="text-[10px] text-[#15803D] font-bold">Autonomous Governance</span>
+        <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-4 flex flex-col gap-1 shadow-2xs">
+          <span className="text-[11px] font-bold text-[#71717A] uppercase tracking-wider">POLICY COMPLIANCE</span>
+          <span className="text-2xl font-black text-[#18181B]">100%</span>
+          <span className="text-[10px] text-[#FF7A30] font-bold">Autonomous Governance</span>
         </div>
       </div>
 
       {/* 2. History List Panel */}
-      <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-6 flex flex-col gap-4 shadow-xs">
+      <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-6 flex flex-col gap-4 shadow-sm shadow-[rgba(180,160,140,0.06)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-black text-[#1E4726] tracking-tight">Audit Trail & Change History</h2>
-            <p className="text-xs text-[#54825A]">Chronological record of automated blast radius safety checks.</p>
+            <h2 className="text-lg font-black text-[#18181B] tracking-tight">Audit Trail & Change History</h2>
+            <p className="text-xs text-[#71717A]">Chronological record of automated blast radius safety checks.</p>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Filter Tabs */}
-            <div className="flex items-center p-1 rounded-full bg-[#F4FDEE] border border-[#BCE99A] text-xs font-bold shadow-xs">
+            <div className="flex items-center p-1 rounded-full bg-[#FAF7F2] border border-[#EFE8DF] text-xs font-bold shadow-2xs">
               {(['All', 'Blocked', 'Approved'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
                   className={`px-3.5 py-1 rounded-full transition-all cursor-pointer ${
-                    filter === tab ? 'bg-[#276735] text-white shadow-xs' : 'text-[#54825A] hover:text-[#1E4726]'
+                    filter === tab ? 'bg-[#FFF4EB] text-[#FF7A30] border border-[#FED7AA] shadow-2xs' : 'text-[#71717A] hover:text-[#18181B]'
                   }`}
                 >
                   {tab}
@@ -162,9 +162,9 @@ export const HistoryView: React.FC = () => {
             {/* Export CSV */}
             <button
               onClick={() => alert('Audit log exported as CSV.')}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#DCF8C6] hover:bg-[#D4F7B2] border border-[#BCE99A] text-xs font-bold text-[#1E4726] transition-all shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#FFF4EB] border border-[#EFE8DF] text-xs font-bold text-[#18181B] transition-all shadow-2xs cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-[#15803D]" />
+              <Download className="w-3.5 h-3.5 text-[#FF7A30]" />
               <span>Export CSV</span>
             </button>
           </div>
@@ -175,35 +175,35 @@ export const HistoryView: React.FC = () => {
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="p-4 rounded-2xl bg-[#F4FDEE] hover:bg-[#FFFFFF] border border-[#BCE99A] transition-all flex flex-wrap items-center justify-between gap-4"
+              className="p-4 rounded-2xl bg-[#FAF7F2] hover:bg-[#FFFFFF] border border-[#EFE8DF] transition-all flex flex-wrap items-center justify-between gap-4 shadow-2xs hover:shadow-xs"
             >
               <div className="flex items-center gap-3.5">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-xs ${
-                  item.decision === 'BLOCKED' ? 'bg-[#FFECEC] text-[#E03131] border border-[#FCD5CF]' : 'bg-[#ECFDF5] text-[#16A34A] border border-[#BBF7D0]'
+                <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-bold text-xs shadow-2xs ${
+                  item.decision === 'BLOCKED' ? 'bg-[#FFF1F2] text-[#EF4444] border border-[#FECDD3]' : 'bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0]'
                 }`}>
                   {item.decision === 'BLOCKED' ? <ShieldAlert className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-black text-[#1E4726]">{item.ticket}</span>
-                    <span className="text-[11px] text-[#54825A]">• {item.time}</span>
-                    <span className="text-[11px] text-[#54825A]">• {item.author}</span>
+                    <span className="font-mono text-xs font-black text-[#18181B]">{item.ticket}</span>
+                    <span className="text-[11px] text-[#71717A]">• {item.time}</span>
+                    <span className="text-[11px] text-[#71717A]">• {item.author}</span>
                   </div>
-                  <div className="text-xs font-bold text-[#1E4726] mt-0.5">{item.title}</div>
-                  <div className="text-[11px] text-[#54825A] mt-0.5">{item.impact}</div>
+                  <div className="text-xs font-bold text-[#18181B] mt-0.5">{item.title}</div>
+                  <div className="text-[11px] text-[#71717A] mt-0.5">{item.impact}</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="text-xs font-black text-[#1E4726]">Risk: {item.riskScore}/100</div>
-                  <div className="text-[10px] text-[#54825A]">{item.region} • {item.env}</div>
+                  <div className="text-xs font-black text-[#18181B]">Risk: {item.riskScore}/100</div>
+                  <div className="text-[10px] text-[#71717A]">{item.region} • {item.env}</div>
                 </div>
 
-                <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-xs ${
+                <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-2xs ${
                   item.decision === 'BLOCKED'
-                    ? 'bg-[#FFECEC] text-[#E03131] border border-[#FCD5CF]'
-                    : 'bg-[#ECFDF5] text-[#16A34A] border border-[#BBF7D0]'
+                    ? 'bg-[#FFF1F2] text-[#EF4444] border border-[#FECDD3]'
+                    : 'bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0]'
                 }`}>
                   {item.decision}
                 </span>
@@ -215,3 +215,5 @@ export const HistoryView: React.FC = () => {
     </div>
   );
 };
+
+export default HistoryView;

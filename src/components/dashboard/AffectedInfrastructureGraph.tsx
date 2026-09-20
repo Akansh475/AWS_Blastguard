@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Maximize2,
+  Plus,
+  Minus,
+  Lock,
+  RotateCcw,
   Network,
   Database,
   Server,
-  Shield,
+  Cloud,
   Layers,
-  ArrowRight,
-  ExternalLink,
+  Cpu,
+  ShieldAlert,
   AlertTriangle,
-  Zap
+  Zap,
+  Radio
 } from 'lucide-react';
 import { DashboardChangeRequest } from '../../data/mockData';
 
@@ -21,167 +27,355 @@ export const AffectedInfrastructureGraph: React.FC<AffectedInfrastructureGraphPr
   request,
   onOpenImpactStudio,
 }) => {
-  return (
-    <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
-      {/* Header with Title and "Open 3D Impact Studio" Action */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#DCF8C6] border border-[#BCE99A] flex items-center justify-center text-[#15803D]">
-            <Network className="w-4 h-4 text-[#15803D]" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-[#1E4726] tracking-tight">
-              Affected Infrastructure
-            </h3>
-            <p className="text-[11px] text-[#54825A]">
-              Direct & downstream blast radius dependency tree
-            </p>
-          </div>
-        </div>
+  const [activeTab, setActiveTab] = useState<
+    'graph' | 'affected' | 'analysis' | 'policies' | 'recommendations'
+  >('graph');
+  const [viewMode, setViewMode] = useState<'graph' | 'list'>('graph');
+  const [zoomLevel, setZoomLevel] = useState(1);
 
-        <button
-          onClick={onOpenImpactStudio}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#BAF084] hover:bg-[#A8EB6C] border border-[#8CD94B] text-xs font-bold text-[#1E4726] transition-all hover:shadow-xs active:scale-98 cursor-pointer shadow-xs"
-        >
-          <span>Open Impact Studio</span>
-          <ExternalLink className="w-3.5 h-3.5 text-[#1E4726]" />
-        </button>
+  return (
+    <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-5 sm:p-6 shadow-sm shadow-[rgba(180,160,140,0.06)] flex flex-col gap-4 font-sans select-none">
+      {/* ========================================================================= */}
+      {/* 1. TOP NAVIGATION TABS ROW */}
+      {/* ========================================================================= */}
+      <div className="flex items-center justify-between border-b border-[#F2ECE4] pb-1 overflow-x-auto gap-3">
+        <div className="flex items-center gap-6 text-xs sm:text-sm font-bold shrink-0">
+          <button
+            onClick={() => setActiveTab('graph')}
+            className={`pb-3 relative transition-colors cursor-pointer ${
+              activeTab === 'graph'
+                ? 'text-[#FF7A30]'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            <span>Impact Graph</span>
+            {activeTab === 'graph' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF7A30] rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('affected')}
+            className={`pb-3 relative transition-colors cursor-pointer ${
+              activeTab === 'affected'
+                ? 'text-[#FF7A30]'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            <span>Affected Resources ({request.affectedResources})</span>
+            {activeTab === 'affected' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF7A30] rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('analysis')}
+            className={`pb-3 relative transition-colors cursor-pointer ${
+              activeTab === 'analysis'
+                ? 'text-[#FF7A30]'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            <span>Agent Analysis</span>
+            {activeTab === 'analysis' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF7A30] rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('policies')}
+            className={`pb-3 relative transition-colors cursor-pointer ${
+              activeTab === 'policies'
+                ? 'text-[#FF7A30]'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            <span>Policy Checks</span>
+            {activeTab === 'policies' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF7A30] rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('recommendations')}
+            className={`pb-3 relative transition-colors cursor-pointer ${
+              activeTab === 'recommendations'
+                ? 'text-[#FF7A30]'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            <span>Recommendations</span>
+            {activeTab === 'recommendations' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF7A30] rounded-full" />
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Node-and-Connection Tree Graph */}
-      <div className="relative bg-[#F4FDEE] border border-[#BCE99A] rounded-xl p-5 overflow-hidden">
-        {/* Subtle grid background pattern */}
+      {/* ========================================================================= */}
+      {/* 2. GRAPH CONTROL BAR & LEGEND */}
+      {/* ========================================================================= */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        {/* Legend Pills */}
+        <div className="flex items-center gap-3 text-xs font-semibold flex-wrap">
+          <span className="flex items-center gap-1.5 text-[#EF4444]">
+            <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+            Critical
+          </span>
+          <span className="flex items-center gap-1.5 text-[#F97316]">
+            <span className="w-2 h-2 rounded-full bg-[#F97316]" />
+            Affected
+          </span>
+          <span className="flex items-center gap-1.5 text-[#3B82F6]">
+            <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+            Related
+          </span>
+          <span className="flex items-center gap-1.5 text-[#9CA3AF]">
+            <span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />
+            Unrelated
+          </span>
+        </div>
+
+        {/* View Mode Toggle: Graph | List */}
+        <div className="flex items-center p-1 rounded-full bg-[#FAF7F2] border border-[#EFE8DF] text-xs font-bold shadow-2xs">
+          <button
+            onClick={() => setViewMode('graph')}
+            className={`px-3.5 py-1 rounded-full transition-all cursor-pointer ${
+              viewMode === 'graph'
+                ? 'bg-[#FFFFFF] text-[#18181B] shadow-xs'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            Graph
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-3.5 py-1 rounded-full transition-all cursor-pointer ${
+              viewMode === 'list'
+                ? 'bg-[#FFFFFF] text-[#18181B] shadow-xs'
+                : 'text-[#71717A] hover:text-[#18181B]'
+            }`}
+          >
+            List
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. INTERACTIVE TOPOLOGY GRAPH CANVAS */}
+      {/* ========================================================================= */}
+      <div className="relative w-full h-[460px] sm:h-[490px] rounded-2xl bg-[#FFFDF8] border border-[#F3EDE4] overflow-hidden flex items-center justify-center">
+        {/* Subtle grid pattern background */}
         <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          className="absolute inset-0 opacity-[0.25] pointer-events-none"
           style={{
-            backgroundImage: `radial-gradient(#1E4726 1px, transparent 1px)`,
-            backgroundSize: '16px 16px',
+            backgroundImage: `radial-gradient(#E8DFD3 1.2px, transparent 1.2px)`,
+            backgroundSize: '20px 20px',
           }}
         />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 lg:gap-8 justify-between">
-          {/* LEVEL 1: ROOT ORIGIN RESOURCE (AWS ORANGE) */}
-          <div className="flex flex-col items-center shrink-0 w-full md:w-auto">
-            <div className="relative p-4 rounded-2xl bg-[#FFFFFF] border-2 border-[#FF9900] shadow-[0_4px_16px_rgba(255,153,0,0.15)] flex flex-col items-center gap-2 min-w-[170px] text-center">
-              <span className="px-2 py-0.5 rounded-full bg-[#FFF7D6] text-[#FF9900] border border-[#FFD54F]/60 text-[10px] font-bold uppercase tracking-wider">
-                Root Origin
+        {/* Left Floating Zoom / Fit Toolbar */}
+        <div className="absolute left-4 top-4 flex flex-col gap-1.5 bg-[#FFFFFF] border border-[#EFE8DF] rounded-2xl p-1.5 shadow-sm z-20">
+          <button
+            onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.6))}
+            className="w-7 h-7 rounded-xl hover:bg-[#FAF7F2] text-[#71717A] hover:text-[#18181B] flex items-center justify-center transition-colors cursor-pointer"
+            title="Zoom In"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.6))}
+            className="w-7 h-7 rounded-xl hover:bg-[#FAF7F2] text-[#71717A] hover:text-[#18181B] flex items-center justify-center transition-colors cursor-pointer"
+            title="Zoom Out"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onOpenImpactStudio}
+            className="w-7 h-7 rounded-xl hover:bg-[#FAF7F2] text-[#71717A] hover:text-[#18181B] flex items-center justify-center transition-colors cursor-pointer"
+            title="Maximize Viewport"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            className="w-7 h-7 rounded-xl hover:bg-[#FAF7F2] text-[#71717A] hover:text-[#18181B] flex items-center justify-center transition-colors cursor-pointer"
+            title="Lock Viewport"
+          >
+            <Lock className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Handwritten "See the bigger picture" Callout */}
+        <div className="absolute right-14 top-20 hidden md:flex flex-col items-center select-none z-10">
+          <span className="font-handwriting text-base text-[#D97706] rotate-6">
+            See the bigger picture
+          </span>
+          <svg className="w-10 h-10 -rotate-12 text-[#D97706]/70 stroke-current fill-none mt-0.5" viewBox="0 0 40 40">
+            <path d="M10 5 Q 30 15 25 35" strokeWidth="1.8" strokeDasharray="3 3" />
+            <polygon points="25,35 22,28 29,30" fill="currentColor" />
+          </svg>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* RADIAL SVG CONNECTOR LINES */}
+        {/* ========================================================================= */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+          {/* Curves from Center (50%, 50%) to Perimeter Nodes */}
+          {/* Top: VPC (50%, 14%) */}
+          <path d="M 50% 50% Q 50% 32% 50% 16%" stroke="#10B981" strokeWidth="1.8" strokeDasharray="4 4" fill="none" opacity="0.75" />
+          {/* Top-Right: Auth Service (74%, 22%) */}
+          <path d="M 50% 50% Q 62% 36% 72% 22%" stroke="#F59E0B" strokeWidth="1.8" fill="none" opacity="0.75" />
+          {/* Right: User Service (76%, 42%) */}
+          <path d="M 50% 50% Q 64% 46% 74% 42%" stroke="#F59E0B" strokeWidth="1.8" fill="none" opacity="0.75" />
+          {/* Bottom-Right: Redis Cache (74%, 62%) */}
+          <path d="M 50% 50% Q 62% 56% 72% 62%" stroke="#3B82F6" strokeWidth="1.8" fill="none" opacity="0.75" />
+          {/* Far Bottom-Right: Backup Service (76%, 80%) */}
+          <path d="M 50% 50% Q 64% 68% 74% 80%" stroke="#3B82F6" strokeWidth="1.8" strokeDasharray="3 3" fill="none" opacity="0.75" />
+          {/* Bottom Center: Internal ALB (50%, 82%) */}
+          <path d="M 50% 50% Q 50% 66% 50% 82%" stroke="#3B82F6" strokeWidth="1.8" fill="none" opacity="0.75" />
+          {/* Left: Payment DB (28%, 56%) */}
+          <path d="M 50% 50% Q 38% 54% 28% 56%" stroke="#F97316" strokeWidth="2.2" fill="none" opacity="0.85" />
+          {/* Bottom-Left: Read Replica (28%, 74%) */}
+          <path d="M 28% 56% Q 28% 66% 28% 74%" stroke="#EAB308" strokeWidth="1.5" strokeDasharray="3 3" fill="none" opacity="0.75" />
+          {/* Top-Left: Payment API (26%, 32%) */}
+          <path d="M 50% 50% Q 38% 40% 28% 32%" stroke="#EF4444" strokeWidth="2.2" fill="none" opacity="0.85" />
+          <path d="M 28% 32% Q 28% 44% 28% 56%" stroke="#EF4444" strokeWidth="1.8" strokeDasharray="3 3" fill="none" opacity="0.75" />
+        </svg>
+
+        {/* ========================================================================= */}
+        {/* GRAPH NODES (EXACT COMPOSITION MATCHING ATTACHED IMAGE) */}
+        {/* ========================================================================= */}
+        <div
+          className="relative w-full h-full flex items-center justify-center transition-transform duration-200"
+          style={{ transform: `scale(${zoomLevel})` }}
+        >
+          {/* 1. TOP: VPC prod-vpc (Soft Green Pill) */}
+          <div className="absolute top-[8%] left-[50%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Cloud className="w-3.5 h-3.5 text-[#16A34A]" />
+            <div className="text-left">
+              <div className="text-[9px] font-bold text-[#16A34A] leading-tight">VPC</div>
+              <div className="text-xs font-black text-[#18181B] leading-tight">prod-vpc</div>
+            </div>
+          </div>
+
+          {/* 2. TOP-RIGHT: Auth Service (Soft Amber Pill) */}
+          <div className="absolute top-[18%] left-[72%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFBEB] border border-[#FDE68A] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Server className="w-3.5 h-3.5 text-[#D97706]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Auth Service</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">ECS Service</div>
+            </div>
+          </div>
+
+          {/* 3. RIGHT: User Service (Soft Amber Pill) */}
+          <div className="absolute top-[38%] left-[74%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFBEB] border border-[#FDE68A] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Server className="w-3.5 h-3.5 text-[#D97706]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">User Service</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">ECS Service</div>
+            </div>
+          </div>
+
+          {/* 4. BOTTOM-RIGHT: Redis Cache (Soft Blue Pill) */}
+          <div className="absolute top-[58%] left-[72%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF6FF] border border-[#BFDBFE] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Database className="w-3.5 h-3.5 text-[#2563EB]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Redis Cache</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">ElastiCache</div>
+            </div>
+          </div>
+
+          {/* 5. FAR BOTTOM-RIGHT: Backup Service (Soft Blue Pill) */}
+          <div className="absolute top-[76%] left-[74%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF6FF] border border-[#BFDBFE] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Zap className="w-3.5 h-3.5 text-[#2563EB]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Backup Service</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">Lambda</div>
+            </div>
+          </div>
+
+          {/* 6. BOTTOM CENTER: Internal ALB (Soft Blue Pill) */}
+          <div className="absolute top-[78%] left-[50%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF6FF] border border-[#BFDBFE] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Network className="w-3.5 h-3.5 text-[#2563EB]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Internal ALB</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">Load Balancer</div>
+            </div>
+          </div>
+
+          {/* 7. TOP-LEFT: Payment API (Soft Coral Pill) */}
+          <div className="absolute top-[28%] left-[26%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFF1F2] border border-[#FECDD3] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Server className="w-3.5 h-3.5 text-[#E11D48]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Payment API</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">ECS Service</div>
+            </div>
+          </div>
+
+          {/* 8. LEFT: Payment DB (Soft Orange Pill) */}
+          <div className="absolute top-[52%] left-[26%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFF4EB] border border-[#FED7AA] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Database className="w-3.5 h-3.5 text-[#EA580C]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Payment DB</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">RDS (Primary)</div>
+            </div>
+          </div>
+
+          {/* 9. BOTTOM-LEFT: Read Replica (Soft Yellow Pill) */}
+          <div className="absolute top-[70%] left-[26%] -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FEFCE8] border border-[#FEF08A] shadow-xs cursor-pointer hover:scale-105 transition-transform z-10">
+            <Database className="w-3.5 h-3.5 text-[#CA8A04]" />
+            <div className="text-left">
+              <div className="text-[11px] font-black text-[#18181B] leading-tight">Read Replica</div>
+              <div className="text-[9px] font-semibold text-[#71717A] leading-tight">RDS (Replica)</div>
+            </div>
+          </div>
+
+          {/* 10. CENTER ROOT TARGET: subnet-07 with glowing red halo */}
+          <div className="relative flex flex-col items-center justify-center z-20 cursor-pointer">
+            {/* Glowing red background pulse ring */}
+            <div className="absolute w-28 h-28 rounded-full bg-[#EF4444]/15 animate-ping" />
+            <div className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] blur-md" />
+
+            <div className="relative px-5 py-3 rounded-full bg-[#FFFFFF] border-2 border-[#EF4444] shadow-md shadow-[#EF4444]/20 flex flex-col items-center text-center">
+              <div className="w-7 h-7 rounded-full bg-[#FFF1F2] text-[#E11D48] flex items-center justify-center mb-0.5">
+                <AlertTriangle className="w-4 h-4 text-[#EF4444] stroke-[2.5]" />
+              </div>
+              <span className="text-xs font-black text-[#18181B] tracking-tight leading-tight">
+                {request.resourceName}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-[#FFF7D6] flex items-center justify-center text-[#FF9900] font-black">
-                <Layers className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-[#171717] truncate">
-                  {request.resourceName}
-                </div>
-                <div className="text-[10px] text-[#6B7280]">
-                  {request.environment} • VPC Core
-                </div>
-              </div>
-            </div>
-            <span className="text-[10px] font-semibold text-[#EF4444] mt-1.5 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> Target Deletion
-            </span>
-          </div>
-
-          {/* Connection Lines (Arrow) */}
-          <div className="hidden md:flex flex-col items-center justify-center text-[#9CA3AF] shrink-0">
-            <div className="w-12 h-[2px] bg-gradient-to-r from-[#FF9900] to-[#EF4444]" />
-            <span className="text-[9px] font-bold text-[#6B7280] mt-1">Blast Path</span>
-          </div>
-
-          {/* LEVEL 2: DIRECT IMPACT CRITICAL SERVICES */}
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-            {/* 1. Payment API Service (Red - Critical) */}
-            <div className="p-3 rounded-xl bg-[#FFFFFF] border border-[#FCD5CF] shadow-xs hover:shadow-sm transition-shadow flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#FFECEC] text-[#EF4444] flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                <Server className="w-4 h-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-bold text-[#171717] truncate">
-                    Payment API
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#FFECEC] text-[#EF4444]">
-                    CRITICAL
-                  </span>
-                </div>
-                <div className="text-[10px] text-[#6B7280] mt-0.5">
-                  Revenue Critical • 2.4M req/hr
-                </div>
-                {/* Secondary dependent link */}
-                <div className="mt-1.5 pt-1.5 border-t border-[#F3F4F6] flex items-center gap-1 text-[10px] text-[#6B7280]">
-                  <ArrowRight className="w-3 h-3 text-[#EF4444]" />
-                  <span>Aurora Multi-AZ DB Cluster</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. Authentication Broker (Red - Critical) */}
-            <div className="p-3 rounded-xl bg-[#FFFFFF] border border-[#FCD5CF] shadow-xs hover:shadow-sm transition-shadow flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#FFECEC] text-[#EF4444] flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                <Shield className="w-4 h-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-bold text-[#171717] truncate">
-                    Auth & Session Broker
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#FFECEC] text-[#EF4444]">
-                    CRITICAL
-                  </span>
-                </div>
-                <div className="text-[10px] text-[#6B7280] mt-0.5">
-                  Tier 0 Security • 3.1M req/hr
-                </div>
-                <div className="mt-1.5 pt-1.5 border-t border-[#F3F4F6] flex items-center gap-1 text-[10px] text-[#6B7280]">
-                  <Zap className="w-3 h-3 text-[#F59E0B]" />
-                  <span>Token Verification Gateway</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Order Fulfillment Service (Yellow - Warning) */}
-            <div className="p-3 rounded-xl bg-[#FFFFFF] border border-[#FDE68A] shadow-xs hover:shadow-sm transition-shadow flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                <Server className="w-4 h-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-bold text-[#171717] truncate">
-                    Order Core Service
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#FEF3C7] text-[#D97706]">
-                    WARNING
-                  </span>
-                </div>
-                <div className="text-[10px] text-[#6B7280] mt-0.5">
-                  Tier 1 Critical • 1.8M req/hr
-                </div>
-              </div>
-            </div>
-
-            {/* 4. External Cloud Dependency (Neutral Gray) */}
-            <div className="p-3 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] shadow-xs hover:shadow-sm transition-shadow flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#F3F4F6] text-[#6B7280] flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                <Database className="w-4 h-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-bold text-[#171717] truncate">
-                    External Gateway
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-[#F3F4F6] text-[#6B7280]">
-                    EXTERNAL
-                  </span>
-                </div>
-                <div className="text-[10px] text-[#6B7280] mt-0.5">
-                  Third-party webhook ingress
-                </div>
-              </div>
+              <span className="text-[9.5px] font-extrabold text-[#EF4444] uppercase tracking-wider leading-tight">
+                VPC Subnet
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 4. CANVAS BOTTOM STATUS BAR */}
+        {/* ========================================================================= */}
+        <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between z-20 pointer-events-auto">
+          {/* Blast Radius Counter Pill */}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFFFF]/90 backdrop-blur-md border border-[#EFE8DF] shadow-2xs">
+            <div className="w-5 h-5 rounded-full bg-[#FAF5FF] text-[#9333EA] flex items-center justify-center">
+              <Radio className="w-3 h-3 text-[#9333EA]" />
+            </div>
+            <div className="text-xs text-[#18181B] font-bold">
+              Blast Radius: <span className="font-extrabold text-[#18181B]">{request.affectedResources} resources</span> • <span className="text-[#EF4444] font-extrabold">{request.criticalServices} critical services</span>
+            </div>
+          </div>
+
+          {/* View Fullscreen Button */}
+          <button
+            onClick={onOpenImpactStudio}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FFFFFF]/95 hover:bg-[#FFFFFF] border border-[#EFE8DF] hover:border-[#FED7AA] text-xs font-extrabold text-[#18181B] shadow-2xs transition-all cursor-pointer"
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-[#FF7A30]" />
+            <span>View Fullscreen</span>
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default AffectedInfrastructureGraph;

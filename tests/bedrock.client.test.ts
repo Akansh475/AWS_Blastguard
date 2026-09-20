@@ -101,7 +101,7 @@ describe('BedrockClient & BedrockClientWrapper', () => {
       expect(result).toBe(mockJson);
       expect(bedrockMock.calls()).toHaveLength(1);
       const call = bedrockMock.call(0);
-      expect(call.args[0].input.modelId).toBe('anthropic.claude-3-5-sonnet-20240620-v1:0');
+      expect((call.args[0].input as any).modelId).toBe('anthropic.claude-3-5-sonnet-20240620-v1:0');
     });
 
     it('should throw error when Bedrock returns empty response content', async () => {

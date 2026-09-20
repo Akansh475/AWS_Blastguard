@@ -43,7 +43,7 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
     {
       id: 'm1',
       sender: 'bot',
-      text: `Hello! I'm **BlastGuard AI Assistant**.\n\nI've analyzed **${request.title}** on AWS \`${request.region}\` (\`${request.environment}\`).\n\nDeleting this subnet will sever Elastic Network Interfaces (ENIs) for Payment API and trigger cascade database outages. How can I assist you with this change?`,
+      text: `Hello! I'm **CloudGuard AI Assistant**.\n\nI've analyzed **${request.title}** on AWS \`${request.region}\` (\`${request.environment}\`).\n\nDeleting this subnet will sever Elastic Network Interfaces (ENIs) for Payment API and trigger cascade database outages. How can I assist you with this change?`,
       hasAction: true,
     },
   ]);
@@ -84,10 +84,10 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
         botReply = `⚠️ **Blast Radius Risk Assessment (${request.riskScore}/100 - Critical):**\n\n• **Direct Impact**: 7 services\n• **Indirect Ripple**: 11 downstream dependencies\n• **Downtime Estimate**: Immediate 502 Bad Gateway for 100% of checkout transactions\n• **Blast Horizon**: Revenue loss projected at $42,000 / min without failover route.`;
         action = true;
       } else if (q.includes('fix') || q.includes('remed') || q.includes('how to')) {
-        botReply = `🔧 **Recommended Safe Remediation Plan:**\n\n1. Drain ENI container traffic from \`${request.resourceName}\` to secondary subnet \`subnet-08\` in AZ-2.\n2. Verify health check telemetry for Payment API on the secondary subnet.\n3. Re-run BlastGuard simulation to confirm blast radius drops below **20/100** before applying deletion.`;
+        botReply = `🔧 **Recommended Safe Remediation Plan:**\n\n1. Drain ENI container traffic from \`${request.resourceName}\` to secondary subnet in AZ-2.\n2. Verify health check telemetry for Payment API on the secondary subnet.\n3. Re-run simulation to confirm blast radius drops below **20/100** before applying deletion.`;
         action = true;
       } else {
-        botReply = `I evaluated **"${query}"** against our live AWS digital twin for **${request.title}**.\n\nOur automated Cedar safety engine recommends draining container traffic to \`subnet-08\` in AZ-2 before deletion to ensure zero production disruptions.`;
+        botReply = `I evaluated **"${query}"** against our live AWS digital twin for **${request.title}**.\n\nOur automated Cedar safety engine recommends draining container traffic before deletion to ensure zero production disruptions.`;
       }
 
       setMessages((prev) => [
@@ -113,11 +113,8 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 select-none">
+    <div className="fixed bottom-6 right-6 z-40 select-none font-sans">
       <AnimatePresence>
-        {/* ========================================================================= */}
-        {/* BIGGER & DRAGGABLE MOVABLE ASSISTANT WINDOW */}
-        {/* ========================================================================= */}
         {isOpen && (
           <motion.div
             drag
@@ -127,75 +124,71 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.94 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className={`glass-panel p-5 sm:p-6 flex flex-col gap-4 shadow-[0_25px_70px_rgba(60,120,40,0.18)] border border-[#BCE99A] mb-3 ${
+            className={`bg-[#FFFFFF] p-5 sm:p-6 flex flex-col gap-4 shadow-[0_20px_60px_rgba(180,160,140,0.2)] border border-[#EFE8DF] rounded-3xl mb-3 ${
               isExpanded
                 ? 'w-[90vw] sm:w-[620px] lg:w-[680px] h-[75vh]'
                 : 'w-[92vw] sm:w-[480px] lg:w-[520px] h-[580px]'
             }`}
           >
-            {/* 1. DRAGGABLE WINDOW HEADER (Drag Handle) */}
-            <div className="flex items-center justify-between border-b border-[#BCE99A]/60 pb-3.5 cursor-grab active:cursor-grabbing">
+            {/* 1. DRAGGABLE WINDOW HEADER */}
+            <div className="flex items-center justify-between border-b border-[#F2ECE4] pb-3.5 cursor-grab active:cursor-grabbing">
               {/* Mascot + Title */}
               <div className="flex items-center gap-3">
-                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#BAF084] to-[#A4EB67] border border-[#8CD94B]/60 flex items-center justify-center shrink-0 shadow-xs">
+                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFF4EB] to-[#FFE7D3] border border-[#FED7AA] flex items-center justify-center shrink-0 shadow-2xs">
                   <img
                     src="/mascot-icon.svg"
-                    alt="BlastGuard Mascot"
+                    alt="CloudGuard Mascot"
                     className="w-7 h-7 object-contain"
                   />
                   <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-[#22C55E]"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF7A30] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF7A30]"></span>
                   </span>
                 </div>
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-[#1E4726] tracking-tight">
-                      Ask BlastGuard
+                    <h3 className="text-base font-black text-[#18181B] tracking-tight">
+                      Ask CloudGuard
                     </h3>
-                    <span className="px-2 py-0.2 rounded-full bg-[#BAF084] text-[#1E4726] text-[10px] font-bold uppercase tracking-wider border border-[#9FE65E]">
+                    <span className="px-2 py-0.5 rounded-full bg-[#FFF4EB] text-[#FF7A30] text-[10px] font-bold uppercase tracking-wider border border-[#FED7AA]">
                       AI COPILOT
                     </span>
                   </div>
-                  <p className="text-xs text-[#54825A] mt-0.5 font-medium">
+                  <p className="text-xs text-[#71717A] mt-0.5 font-medium">
                     Live Digital Twin • Drag window anywhere
                   </p>
                 </div>
               </div>
 
-              {/* Drag Indicator & Action Controls */}
+              {/* Action Controls */}
               <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                {/* Drag Grip Handle */}
                 <div
-                  className="px-2 py-1 rounded-lg bg-[#DCF8C6] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center cursor-grab active:cursor-grabbing mr-1"
+                  className="px-2 py-1 rounded-lg bg-[#FAF7F2] text-[#71717A] hover:text-[#18181B] flex items-center justify-center cursor-grab active:cursor-grabbing mr-1"
                   title="Drag window"
                 >
                   <GripHorizontal className="w-4 h-4" />
                 </div>
 
-                {/* Reset Chat */}
                 <button
                   onClick={handleResetChat}
-                  className="w-8 h-8 rounded-full bg-[#DCF8C6] hover:bg-[#D4F7B2] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center transition-all shadow-2xs cursor-pointer border border-[#BCE99A]"
+                  className="w-8 h-8 rounded-full bg-[#FAF7F2] hover:bg-[#FFF4EB] text-[#71717A] hover:text-[#FF7A30] flex items-center justify-center transition-all shadow-2xs cursor-pointer border border-[#EFE8DF]"
                   title="Reset conversation"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
 
-                {/* Expand / Minimize Window */}
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-8 h-8 rounded-full bg-[#DCF8C6] hover:bg-[#D4F7B2] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center transition-all shadow-2xs cursor-pointer hidden sm:flex border border-[#BCE99A]"
+                  className="w-8 h-8 rounded-full bg-[#FAF7F2] hover:bg-[#FFF4EB] text-[#71717A] hover:text-[#FF7A30] flex items-center justify-center transition-all shadow-2xs cursor-pointer hidden sm:flex border border-[#EFE8DF]"
                   title={isExpanded ? 'Restore size' : 'Expand window'}
                 >
                   {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
 
-                {/* Close Button */}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-8 h-8 rounded-full bg-[#DCF8C6] hover:bg-[#D4F7B2] text-[#54825A] hover:text-[#1E4726] flex items-center justify-center transition-all shadow-2xs cursor-pointer border border-[#BCE99A]"
+                  className="w-8 h-8 rounded-full bg-[#FAF7F2] hover:bg-[#FFF4EB] text-[#71717A] hover:text-[#FF7A30] flex items-center justify-center transition-all shadow-2xs cursor-pointer border border-[#EFE8DF]"
                   title="Close Assistant"
                 >
                   <X className="w-4 h-4" />
@@ -214,9 +207,9 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 <button
                   key={chip.label}
                   onClick={() => handleSendMessage(chip.text)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#F4FDEE] hover:bg-[#DCF8C6] border border-[#BCE99A] text-xs font-bold text-[#1E4726] transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#FFF4EB] border border-[#EFE8DF] hover:border-[#FED7AA] text-xs font-bold text-[#18181B] transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
-                  <Sparkles className="w-3 h-3 text-[#15803D]" />
+                  <Sparkles className="w-3 h-3 text-[#FF7A30]" />
                   <span>{chip.label}</span>
                 </button>
               ))}
@@ -234,21 +227,20 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                     <div
                       className={`p-4 rounded-3xl max-w-[92%] leading-relaxed ${
                         isUser
-                          ? 'bg-[#1E4726] text-white font-medium rounded-br-xs shadow-sm'
-                          : 'bg-[#FFFFFF] border border-[#BCE99A] text-[#1E4726] rounded-bl-xs shadow-xs whitespace-pre-line'
+                          ? 'bg-[#FF7A30] text-white font-medium rounded-br-xs shadow-sm'
+                          : 'bg-[#FAF7F2] border border-[#EFE8DF] text-[#18181B] rounded-bl-xs shadow-xs whitespace-pre-line'
                       }`}
                     >
                       {m.text}
 
-                      {/* Interactive View Impact Button inside Bot Reply */}
                       {!isUser && m.hasAction && onOpenImpactStudio && (
-                        <div className="mt-3 pt-2.5 border-t border-[#BCE99A]/60 flex items-center justify-between">
-                          <span className="text-[11px] font-semibold text-[#54825A]">
+                        <div className="mt-3 pt-2.5 border-t border-[#EFE8DF] flex items-center justify-between">
+                          <span className="text-[11px] font-semibold text-[#71717A]">
                             Want to inspect the graph?
                           </span>
                           <button
                             onClick={onOpenImpactStudio}
-                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BAF084] hover:bg-[#A8EB6C] text-[#1E4726] text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 border border-[#8CD94B]"
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFFFFF] hover:bg-[#FFF4EB] text-[#FF7A30] text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 border border-[#FED7AA]"
                           >
                             <Network className="w-3.5 h-3.5" />
                             <span>Open Topology Studio →</span>
@@ -268,19 +260,19 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="flex items-center gap-2.5 pt-2 border-t border-[#BCE99A]/60"
+              className="flex items-center gap-2.5 pt-2 border-t border-[#F2ECE4]"
             >
               <input
                 type="text"
                 placeholder="Ask about this change, Cedar policy, or AWS dependencies..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-2xl bg-[#F4FDEE] focus:bg-[#FFFFFF] border border-[#BCE99A] text-xs sm:text-sm font-medium text-[#1E4726] placeholder:text-[#54825A] focus:outline-none focus:ring-2 focus:ring-[#15803D]/40 transition-all shadow-inner"
+                className="flex-1 px-4 py-3 rounded-2xl bg-[#FAF7F2] focus:bg-[#FFFFFF] border border-[#EFE8DF] focus:border-[#FF7A30] text-xs sm:text-sm font-medium text-[#18181B] placeholder:text-[#9CA3AF] focus:outline-none transition-all shadow-inner"
               />
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="p-3 rounded-2xl bg-[#BAF084] hover:bg-[#A8EB6C] text-[#1E4726] font-black transition-all shadow-sm disabled:opacity-40 cursor-pointer active:scale-95 flex items-center justify-center shrink-0 border border-[#8CD94B]"
+                className="p-3 rounded-2xl bg-[#FF7A30] hover:bg-[#E86518] text-white font-black transition-all shadow-sm disabled:opacity-40 cursor-pointer active:scale-95 flex items-center justify-center shrink-0"
                 title="Send message"
               >
                 <Send className="w-4 h-4" />
@@ -290,42 +282,39 @@ export const FloatingChatbotWidget: React.FC<FloatingChatbotWidgetProps> = ({
         )}
       </AnimatePresence>
 
-      {/* ========================================================================= */}
-      {/* COLLAPSED FLOATING WIDGET PILL */}
-      {/* ========================================================================= */}
+      {/* COLLAPSED FLOATING WIDGET BUTTON */}
       <motion.button
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.96 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-panel px-5 py-3 flex items-center gap-3.5 shadow-[0_12px_40px_rgba(60,120,40,0.18)] border border-[#BCE99A] hover:border-[#8CD94B] transition-all cursor-pointer bg-[#DCF8C6]/90"
+        className="px-4 py-2.5 rounded-full flex items-center gap-3 shadow-[0_12px_36px_rgba(180,160,140,0.18)] border border-[#EFE8DF] hover:border-[#FED7AA] transition-all cursor-pointer bg-[#FFFFFF]"
       >
-        {/* Light Green Mascot Head with glowing aura */}
-        <div className="relative w-10 h-10 rounded-2xl bg-[#BAF084] border border-[#8CD94B] flex items-center justify-center shrink-0 shadow-2xs">
+        <div className="relative w-9 h-9 rounded-full bg-[#FFF4EB] border border-[#FED7AA] flex items-center justify-center shrink-0 shadow-2xs">
           <img
             src="/mascot-icon.svg"
-            alt="Ask BlastGuard Mascot"
-            className="w-7 h-7 object-contain"
+            alt="Ask CloudGuard Mascot"
+            className="w-6 h-6 object-contain"
           />
-          <span className="absolute -top-1 -right-1 text-sm animate-bounce">
+          <span className="absolute -top-1 -right-1 text-xs animate-bounce">
             ✨
           </span>
         </div>
 
-        {/* Text */}
         <div className="text-left">
-          <div className="text-xs sm:text-sm font-black text-[#1E4726] leading-tight">
-            Ask BlastGuard
+          <div className="text-xs font-black text-[#18181B] leading-tight">
+            Ask CloudGuard
           </div>
-          <div className="text-[11px] font-bold text-[#54825A] leading-tight mt-0.5">
+          <div className="text-[10px] font-bold text-[#71717A] leading-tight mt-0.5">
             Need help?
           </div>
         </div>
 
-        {/* Up / Down Chevron */}
-        <div className="w-7 h-7 rounded-full bg-[#C4EFA0] border border-[#AEDF86] flex items-center justify-center text-[#1E4726] ml-1 shadow-2xs">
-          {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+        <div className="w-6 h-6 rounded-full bg-[#FAF7F2] border border-[#EFE8DF] flex items-center justify-center text-[#71717A] ml-1">
+          {isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
         </div>
       </motion.button>
     </div>
   );
 };
+
+export default FloatingChatbotWidget;

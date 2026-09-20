@@ -53,19 +53,19 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
   }, [requests, searchQuery, filter]);
 
   return (
-    <div className="bg-[#FFFFFF] border border-[#BCE99A] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+    <div className="bg-[#FFFFFF] border border-[#EFE8DF] rounded-3xl p-5 sm:p-6 shadow-sm shadow-[rgba(180,160,140,0.06)] flex flex-col gap-4 font-sans select-none">
       {/* Header: Title + Search + Filter Pills + + New Request */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#BCE99A]/60">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#F2ECE4]">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-black text-[#1E4726] tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-[#18181B] tracking-tight">
               CHANGE REQUESTS
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#DCF8C6] text-[#1E4726] text-xs font-bold border border-[#BCE99A]">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#FAF7F2] text-[#18181B] text-xs font-bold border border-[#EFE8DF]">
               {requests.length} requests
             </span>
           </div>
-          <p className="text-xs text-[#54825A]">
+          <p className="text-xs text-[#71717A]">
             Select a proposed infrastructure change to inspect its blast radius
           </p>
         </div>
@@ -74,20 +74,20 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search Input */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#54825A]" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search requests..."
-              className="pl-8 pr-3 py-1.5 rounded-xl bg-[#F4FDEE] border border-[#BCE99A] text-xs text-[#1E4726] placeholder-[#54825A] focus:outline-none focus:ring-1 focus:ring-[#15803D] w-40 sm:w-48"
+              className="pl-8 pr-3 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#EFE8DF] text-xs text-[#18181B] placeholder-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#FF7A30] w-40 sm:w-48"
             />
           </div>
 
           {/* + New Request Button */}
           <button
             onClick={onNewRequest || (() => alert('Submit new change request'))}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#BAF084] hover:bg-[#A8EB6C] text-[#1E4726] text-xs font-black transition-all shadow-xs active:scale-98 cursor-pointer border border-[#8CD94B]"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FF7A30] hover:bg-[#E86518] text-white text-xs font-black transition-all shadow-xs active:scale-98 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
             <span>New Request</span>
@@ -108,14 +108,14 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 isActive
-                  ? 'bg-[#276735] text-white shadow-xs'
-                  : 'bg-[#F4FDEE] hover:bg-[#DCF8C6] text-[#54825A] border border-[#BCE99A]'
+                  ? 'bg-[#FFF4EB] text-[#FF7A30] border border-[#FED7AA] shadow-2xs'
+                  : 'bg-[#FAF7F2] hover:bg-[#FFFFFF] text-[#71717A] border border-[#EFE8DF]'
               }`}
             >
               <span>{tab}</span>
-              <span className={`text-[10px] ${isActive ? 'text-white/80' : 'text-[#54825A]'}`}>
+              <span className={`text-[10px] ${isActive ? 'text-[#FF7A30]' : 'text-[#71717A]'}`}>
                 {count}
               </span>
             </button>
@@ -123,7 +123,7 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
         })}
       </div>
 
-      {/* Requests Feed List (Discord-Style Horizontal Rows) */}
+      {/* Requests Feed List */}
       <div className="flex flex-col gap-2">
         {filtered.map((req) => {
           const isSelected = req.id === selectedId;
@@ -135,10 +135,10 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
             <div
               key={req.id}
               onClick={() => onSelectRequest(req.id)}
-              className={`group flex items-center justify-between p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
+              className={`group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-[#FFFFFF] border-2 border-[#15803D] shadow-[0_4px_16px_rgba(22,163,74,0.12)]'
-                  : 'bg-[#FFFFFF] hover:bg-[#F4FDEE] border-[#BCE99A]'
+                  ? 'bg-[#FFFFFF] border-2 border-[#FF7A30] shadow-sm shadow-[#FF7A30]/10'
+                  : 'bg-[#FFFFFF] hover:bg-[#FAF7F2] border-[#EFE8DF]'
               }`}
             >
               {/* Left: Status Icon + Title + Meta */}
@@ -147,9 +147,9 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-bold ${
                     isBlocked
-                      ? 'bg-[#FFECEC] text-[#EF4444] border border-[#FCD5CF]'
+                      ? 'bg-[#FFF1F2] text-[#EF4444] border border-[#FECDD3]'
                       : isApproved
-                      ? 'bg-[#ECFDF5] text-[#16A34A] border border-[#BBF7D0]'
+                      ? 'bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0]'
                       : 'bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]'
                   }`}
                 >
@@ -159,15 +159,15 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-xs sm:text-sm font-black text-[#1E4726] truncate group-hover:text-[#15803D] transition-colors">
+                  <div className="text-xs sm:text-sm font-black text-[#18181B] truncate group-hover:text-[#FF7A30] transition-colors">
                     {req.title}
                   </div>
-                  <div className="text-[11px] text-[#54825A] flex items-center gap-2 mt-0.5">
+                  <div className="text-[11px] text-[#71717A] flex items-center gap-2 mt-0.5">
                     <span>{req.serviceCategory}</span>
                     <span>•</span>
                     <span>{req.region}</span>
                     <span>•</span>
-                    <span className="font-bold text-[#1E4726]">{req.environment}</span>
+                    <span className="font-bold text-[#18181B]">{req.environment}</span>
                   </div>
                 </div>
               </div>
@@ -186,14 +186,14 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
                   >
                     {req.riskLevel.toUpperCase()} • {req.riskScore}/100
                   </div>
-                  <div className="text-[10px] text-[#54825A] mt-0.5 font-medium">
+                  <div className="text-[10px] text-[#71717A] mt-0.5 font-medium">
                     {req.timeAgo}
                   </div>
                 </div>
 
                 <ArrowRight
-                  className={`w-4 h-4 text-[#54825A] group-hover:translate-x-0.5 transition-transform ${
-                    isSelected ? 'text-[#15803D]' : ''
+                  className={`w-4 h-4 text-[#71717A] group-hover:translate-x-0.5 transition-transform ${
+                    isSelected ? 'text-[#FF7A30]' : ''
                   }`}
                 />
               </div>
@@ -204,3 +204,5 @@ export const ChangeRequestsFeed: React.FC<ChangeRequestsFeedProps> = ({
     </div>
   );
 };
+
+export default ChangeRequestsFeed;

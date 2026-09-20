@@ -10,7 +10,7 @@ import { ExplanationRecord, ExplanationResult } from '../ai/types/explanation.mo
 export class DynamoDBRequestRepository implements IRequestRepository {
   constructor(
     private readonly docClient: DynamoDBDocumentClient,
-    private readonly tableName: string = config.dynamoDbTableName
+    private readonly tableName: string = config.dynamoDbTableName || 'BlastGuardRequests'
   ) {}
 
   private mapItemToChangeRequest(item: Record<string, unknown>): ChangeRequest {
@@ -257,7 +257,7 @@ export class DynamoDBRequestRepository implements IRequestRepository {
       requestId: (response.Item.requestId as string) || requestId,
       explanation: response.Item.aiExplanation as ExplanationResult,
       generatedAt: (response.Item.aiExplanationGeneratedAt as string) || (response.Item.updatedAt as string),
-      model: (response.Item.aiModel as string) || config.bedrockModelId,
+      model: (response.Item.aiModel as string) || config.bedrockModelId || 'mock-bedrock-v1',
       version: (response.Item.aiExplanationVersion as string) || '1.0.0',
     };
   }

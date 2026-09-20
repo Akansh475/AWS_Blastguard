@@ -10,7 +10,7 @@ import { securityAgent } from '../src/agents/SecurityAgent';
 import { impactAgent } from '../src/agents/ImpactAgent';
 import { policyAgent } from '../src/agents/PolicyAgent';
 import { MockResourceProvider } from '../src/providers/MockResourceProvider';
-import { Resource } from '../models/Resource';
+import { Resource } from '../src/models/Resource';
 
 describe('Stage 4: Risk Engine + Decision Engine + Agent Architecture', () => {
   const provider = new MockResourceProvider();
