@@ -10,12 +10,12 @@ Globals:
     Architectures:
       - x86_64
     Environment:
-      Variables:
-        NODE_ENV: production
-        BLASTGUARD_MODE: aws
-        DYNAMODB_TABLE_NAME: !Ref BlastGuardRequestsTable
-        BEDROCK_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+  Variables:
+    NODE_ENV: production
+    BLASTGUARD_MODE: aws
+    DYNAMODB_TABLE_NAME: !Ref BlastGuardRequestsTable
+    BEDROCK_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
 
 Resources:
   # =================================================================
